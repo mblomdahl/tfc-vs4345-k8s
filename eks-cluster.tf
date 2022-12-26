@@ -35,6 +35,21 @@ module "eks" {
     }
   }
 
+  # aws-auth configmap
+  manage_aws_auth_configmap = true
+
+  aws_auth_users = [
+    {
+      userarn  = "arn:aws:iam::878179636352:user/mats.blomdahl"
+      username = "mblomdahl"
+      groups   = ["system:masters"]
+    }
+  ]
+
+  aws_auth_accounts = [
+    "878179636352"
+  ]
+
   tags = {
     Origin         = var.common_origin_tag
     ResourcePrefix = var.resource_prefix
