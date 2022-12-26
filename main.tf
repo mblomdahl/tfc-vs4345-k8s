@@ -18,8 +18,3 @@ locals {
   resource_prefix = var.resource_prefix
   cluster_name    = "${var.resource_prefix}-cluster"
 }
-
-resource "random_string" "suffix" {
-  length  = 8
-  special = false
-}
