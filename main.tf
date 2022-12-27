@@ -1,20 +1,24 @@
-# Kubernetes provider
-# https://learn.hashicorp.com/terraform/kubernetes/provision-eks-cluster#optional-configure-terraform-kubernetes-provider
-# To learn how to schedule deployments and services using the provider, go here: https://learn.hashicorp.com/terraform/kubernetes/deploy-nginx-kubernetes
-# The Kubernetes provider is included in this file so the EKS module can complete successfully. Otherwise, it throws an error when creating `kubernetes_config_map.aws_auth`.
-# You should **not** schedule deployments and services in this workspace. This keeps workspaces modular (one for provision EKS, another for scheduling Kubernetes resources) as per best practices.
+locals {
+  resource_prefix = var.resource_prefix
+  cluster_name    = "${var.resource_prefix}-cluster"
+}
+
+data "aws_eks_cluster" "default" {
+  name = local.cluster_name
+}
+
+data "aws_eks_cluster_auth" "default" {
+  name = local.cluster_name
+}
+
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
-}
-
-provider "aws" {
-  region = var.region
+  token                  = data.aws_eks_cluster_auth.default.token
 }
 
 data "aws_availability_zones" "available" {}
 
-locals {
-  resource_prefix = var.resource_prefix
-  cluster_name    = "${var.resource_prefix}-cluster"
+provider "aws" {
+  region = var.region
 }
