@@ -10,7 +10,7 @@ variable "account_id" {
 
 variable "role_arn" {
   description = "AWS role ARN"
-  default = "arn:aws:iam::878179636352:role/SPFAM-Dev-TerraformAdmin"
+  default     = "arn:aws:iam::878179636352:role/SPFAM-Dev-TerraformAdmin"
 }
 
 variable "region" {

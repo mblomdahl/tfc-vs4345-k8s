@@ -27,4 +27,4 @@ jobs:
 
       - uses: tchupp/actions-terraform-pr@v1
         with:
-          require-formatting: true
+          pr-comment-title: 'for Cloud Workspace in Org "mblomdahl":'
