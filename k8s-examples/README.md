@@ -45,7 +45,7 @@ Step 7, open the address in your browser and expect to be greeted with a "Hello 
 ## Attributions
 
 All of this is stolen from the [`learnk8s`/"Provisioning Kubernetes clusters on AWS with Terraform and EKS" guide](https://learnk8s.io/terraform-eks#testing-the-cluster-by-deploying-a-simple-hello-world-app),
-thanks @k-mitevski!
+thanks [**@k-mitevski**](https://github.com/k-mitevski)!
 
 
 ## Contributing
