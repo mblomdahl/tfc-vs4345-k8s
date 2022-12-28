@@ -39,7 +39,7 @@ the _Address_ field is populated with an URL:
 Step 7, open the address in your browser and expect to be greeted with a "Hello world!" Kubernetes page (example URL,
 [works on my computer](http://k8s-default-hellokub-119340f37d-1621773271.eu-north-1.elb.amazonaws.com)):
 
-    open k8s-default-hellokub-119340f37d-1621773271.eu-north-1.elb.amazonaws.com
+    open http://k8s-default-hellokub-119340f37d-1621773271.eu-north-1.elb.amazonaws.com
 
 
 ## Attributions
