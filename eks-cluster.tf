@@ -27,7 +27,7 @@ module "eks" {
 
   eks_managed_node_groups = {
     one = {
-      name = "node-group-1"
+      name = "${var.resource_prefix}-node-group-1"
 
       instance_types = [var.node_group_instance_type]
 
@@ -37,7 +37,7 @@ module "eks" {
     }
 
     two = {
-      name = "node-group-2"
+      name = "${var.resource_prefix}-node-group-2"
 
       instance_types = [var.node_group_instance_type]
 
