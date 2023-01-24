@@ -1,8 +1,3 @@
-variable "resource_prefix" {
-  description = "Prefix for AWS EKS resources (VPCs, EKS cluster/namespace)"
-  default     = "mb-eks"
-}
-
 variable "account_id" {
   description = "AWS account ID"
   default     = "878179636352"
@@ -13,14 +8,29 @@ variable "region" {
   default     = "eu-north-1"
 }
 
-variable "eks_ami_type" {
-  description = "AMI type for AWS EKS node group instances"
-  default     = "AL2_x86_64"
+variable "eks_elb_domain" {
+  description = "Domain for EKS ELB"
+  default     = "k8s-ingressn-ingressn-d7a33e1924-2dcfed4179033b4a.elb.eu-north-1.amazonaws.com"
 }
 
-variable "node_group_instance_type" {
-  description = "Type of AWS EKS node group instances to provision"
-  default     = "t3.small"
+variable "eks_elb_zone_id" {
+  description = "Zone ID for EKS ELB"
+  default     = "Z1UDT6IFJ4EJM"
+}
+
+variable "route53_apex" {
+  description = "Domain for Route 53 hosted zone"
+  default     = "smithmicro.io"
+}
+
+variable "route53_apex_zone_id" {
+  description = "Zone ID for Route 53 apex hosted zone"
+  default     = "Z1TY55FUWSMGVV"
+}
+
+variable "route53_subdomain" {
+  description = "Subdomain name for Route 53 hosted zone"
+  default     = "mb-eks"
 }
 
 variable "common_origin_tag" {
