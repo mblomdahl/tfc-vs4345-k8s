@@ -5,17 +5,33 @@ metadata:
   namespace: default
   annotations:
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    cert-manager.io/cluster-issuer: letsencrypt-production
+#    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
+  tls:
+    - hosts:
+        - mb-eks.smithmicro.io
+        - hello-kubernetes.mb-eks.smithmicro.io
+      secretName: hello-kubernetes-tls-secret
   rules:
     - host: mb-eks.smithmicro.io
       http:
         paths:
-          - path: /hello-kubernetes(/|$)(.*)
+          - path: /hello-kubernetes/
             pathType: Prefix
             backend:
               service:
-                name: hello-kubernetes
+                name: hello-kubernetes-on-path
+                port:
+                  number: 80
+    - host: hello-kubernetes.mb-eks.smithmicro.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hello-kubernetes-on-subdomain
                 port:
                   number: 80
 

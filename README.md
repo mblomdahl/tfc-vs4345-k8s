@@ -114,13 +114,11 @@ Example success output:
 
 ### 3. Deploy the Nginx Ingress Controller for Kubernetes
 
-Deploy the Nginx Ingress Controller, "Option 2", by following the AWS
+Deploy the Nginx Ingress Controller, "Option 1", by following the AWS
 [External Access to Kubernetes](https://aws.amazon.com/premiumsupport/knowledge-center/eks-access-kubernetes-services/)
-services guide. Update the `./k8s-infra/deploy-nginx-controller-with-nlb-ssl.yaml` manifest by changing the annotation
-`service.beta.kubernetes.io/aws-load-balancer-ssl-cert` annotation value to use your own account ID instead
-of `878179636352` and your own certificate instead of `3e897236-c6d6-44a8-afca-7554e52797c3`. Apply the updated manifest:
+services guide.
 
-    kubectl apply -f k8s-infra/deploy-nginx-controller-with-nlb-ssl.yaml
+    kubectl apply -f k8s-infra/deploy-nginx-controller-with-ssl.yaml
 
 ### 4. Verify the Deployed Resources
 
@@ -170,11 +168,28 @@ Verify that `nslookup` returns 2 records for `mb-eks.smithmicro.io`:
 
     nslookup mb-eks.smithmicro.io
 
-Verify that `curl` receives a 404 response with valid SSL certificate:
+Verify that `curl` receives a Nginx 404 response:
 
-    curl -v https://mb-eks.smithmicro.io
+    curl -v http://mb-eks.smithmicro.io
 
-### 7. Deploy a Kubernetes Resource
+### 7. Install Cert-Manager in EKS
+
+Install Cert-Manager using Helm:
+
+    helm repo add jetstack https://charts.jetstack.io
+    helm repo update
+    helm install cert-manager jetstack/cert-manager \
+      --namespace cert-manager \
+      --create-namespace \
+      --set installCRDs=true
+
+### 8. Configure Certificate Issuer
+
+Modify the `./k8s-infra/letsencrypt-issuer.yaml` config file by adding your own email address, and apply:
+
+    kubectl apply -f k8s-infra/letsencrypt-issuers.yaml
+
+### 9. Deploy a Kubernetes Resource
 
 Follow the setup steps in [./k8s-examples/README.md](./k8s-examples/README.md) to deploy your service and
 verify that it becomes accessible via the DNS pretty-name.

@@ -1,6 +1,6 @@
 resource "aws_iam_policy" "worker_policy" {
   name        = "eks-worker-policy"
-  description = "EKS worker policy for the ALB Ingress"
+  description = "EKS worker policy for the ELB Ingress"
 
   policy = file("iam-policies/eks-worker-policy.json")
 }
