@@ -36,57 +36,59 @@ see [our variable documentation](https://www.terraform.io/docs/cloud/workspaces/
 
 7. Verify your local configuration with `kubectl cluster-info`
 
-### 2. Configure the AWS Load Balancer Controller Add-On
+
+### 2. Configure the AWS Elastic File System Storage
+
+Configure persistent storage for EKS by following
+the [Amazon EFS CSI Driver User Guide](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html).
+
+Modify the `./k8s-infra/aws-efs-csi-driver-service-account.yaml` manifest by
+replacing `"arn:aws:iam::878179636352:role/mb-eks-efs-csi-driver-role"` with your own role ARN:
+
+    echo $(terraform output -raw iam_aws_efs_csi_driver_service_account_arn)
+
+Apply the Kubernetes service account configuration for `efs-csi-controller-sa`:
+
+    kubectl apply -f k8s-infra/aws-efs-csi-driver-service-account.yaml
+
+Install the Amazon EFS driver using [Helm V3](https://docs.aws.amazon.com/eks/latest/userguide/helm.html) or later,
+replacing `eu-north-1` with your region:
+
+    helm repo add aws-efs-csi-driver https://kubernetes-sigs.github.io/aws-efs-csi-driver
+    helm repo update
+    helm upgrade -i aws-efs-csi-driver aws-efs-csi-driver/aws-efs-csi-driver \
+      --namespace kube-system \
+      --set image.repository=602401143452.dkr.ecr.eu-north-1.amazonaws.com/eks/aws-efs-csi-driver \
+      --set controller.serviceAccount.create=false \
+      --set controller.serviceAccount.name=efs-csi-controller-sa
+
+Identify the EFS filesystem ID:
+
+    echo $(terraform output -raw efs_fs_id)
+
+Modify the `./k8s-infra/aws-efs-storageclass.yaml` manifest by replacing `"fs-033a36bdf9a4002c5"` with
+the filesystem ID from your environment and apply:
+
+    kubectl apply -f k8s-infra/aws-efs-storageclass.yaml
+
+Follow the steps in [./k8s-examples/efs-storage/README.md](./k8s-examples/efs-storage/README.md) to
+verify persistent volumes and storage claims can be utilized in your cluster.
+
+
+### 3. Configure the AWS Load Balancer Controller Add-On
 
 Deploy the AWS Load Balancer Controller by following
-the [Amazon EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/aws-load-balancer-controller.html).
+the [Amazon EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/aws-load-balancer-controller.html),
+summarized below.
 
-First create the `./iam-policies/eks-worker-policy.json` manifest:
+Modify the `./k8s-infra/aws-load-balancer-controller-service-account.yaml` manifest by
+replacing `"arn:aws:iam::878179636352:role/mb-eks-load-balancer-controller-role"` with your own role ARN:
 
-    curl -o iam-policies/eks-worker-policy.json \
-      https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.4.4/docs/install/iam_policy.json
+    echo $(terraform output -raw iam_aws_load_balancer_service_account_arn)
 
-Verify that the IAM policy manifest matches the version in Git (indentation ignored).
+Apply the Kubernetes service account configuration for `aws-load-balancer-controller`:
 
-Then create the IAM policy if it does not already exist (replacing `AWS_PROFILE` export with what matches your locals):
-
-    export AWS_PROFILE=default
-    aws --profile=$AWS_PROFILE iam create-policy \
-      --policy-name AWSLoadBalancerControllerIAMPolicy \
-      --policy-document file://iam-policies/eks-worker-policy.json
-
-Prepare for creating a Kubernetes service account named `aws-load-balancer-controller` in the `kube-system` namespace:
-
-    # Ensure output matches expectation
-    export CLUSTER_NAME=$(terraform output -raw cluster_name) && echo $CLUSTER_NAME
-
-    # Ensure output matches expectation
-    export OIDC_ID=$(aws eks describe-cluster --name $CLUSTER_NAME --query "cluster.identity.oidc.issuer" \
-      --output text | cut -d '/' -f 5) && echo $OIDC_ID
-
-    # Expect output to show the OIDC_ID followed by a trailing "
-    aws iam list-open-id-connect-providers | grep $OIDC_ID | cut -d "/" -f4
-
-Review the `./iam-policies/load-balancer-role-trust-policy.json` manifest, replace account ID `878179636352` with
-your own account number, `B498DC54986685B28E8A1F146AC30099` with your own OIDC ID, and `eu-north-1` with your own region
-and create the IAM role (and replacing `AWS_PROFILE` export with what matches your locals):
-
-    export AWS_PROFILE=default
-    aws --profile=$AWS_PROFILE iam create-role \
-      --role-name AmazonEKSLoadBalancerControllerRole \
-      --assume-role-policy-document file://"iam-policies/load-balancer-role-trust-policy.json"
-
-Attach the IAM policy to the IAM role, replacing account ID `878179636352` with your own account number:
-
-    export AWS_PROFILE=default
-    aws --profile=$AWS_PROFILE iam attach-role-policy \
-      --policy-arn arn:aws:iam::878179636352:policy/AWSLoadBalancerControllerIAMPolicy \
-      --role-name AmazonEKSLoadBalancerControllerRole
-
-Review the `./iam-policies/aws-load-balancer-controller-service-account.yaml` manifest and replace account ID
-`878179636352` with your own account number and apply on your Kubernetes cluster:
-
-     kubectl apply -f iam-policies/aws-load-balancer-controller-service-account.yaml
+    kubectl apply -f k8s-infra/aws-load-balancer-controller-service-account.yaml
 
 Install the AWS Load Balancer Controller using [Helm V3](https://docs.aws.amazon.com/eks/latest/userguide/helm.html) or
 later by applying the Kubernetes manifest:
@@ -112,15 +114,14 @@ Example success output:
     "NAME                           READY   UP-TO-DATE   AVAILABLE   AGE"
     "aws-load-balancer-controller   2/2     2            2           22h"
 
-### 3. Deploy the Nginx Ingress Controller for Kubernetes
+
+### 4. Deploy the Nginx Ingress Controller for Kubernetes and Verify
 
 Deploy the Nginx Ingress Controller, "Option 1", by following the AWS
 [External Access to Kubernetes](https://aws.amazon.com/premiumsupport/knowledge-center/eks-access-kubernetes-services/)
-services guide.
+services guide, summarized in the following sections.
 
     kubectl apply -f k8s-infra/deploy-nginx-controller-with-ssl.yaml
-
-### 4. Verify the Deployed Resources
 
 Verify that the AWS Load Balancer Controller is running:
 
@@ -133,6 +134,7 @@ Verify that the Nginx Ingress Controller is running:
 Verify that your Kubernetes cluster have ingress classes `alb` and `nginx`:
 
     kubectl get ingressclass
+
 
 ### 5. Configure DNS with Route53
 
@@ -162,6 +164,7 @@ Change directory to `./dns` and apply the Terraform configuration:
     terraform plan
     terraform apply
 
+
 ### 6. Verify the DNS Setup
 
 Verify that `nslookup` returns 2 records for `mb-eks.smithmicro.io`:
@@ -171,6 +174,7 @@ Verify that `nslookup` returns 2 records for `mb-eks.smithmicro.io`:
 Verify that `curl` receives a Nginx 404 response:
 
     curl -v http://mb-eks.smithmicro.io
+
 
 ### 7. Install Cert-Manager in EKS
 
@@ -183,13 +187,15 @@ Install Cert-Manager using Helm:
       --create-namespace \
       --set installCRDs=true
 
+
 ### 8. Configure Certificate Issuer
 
 Modify the `./k8s-infra/letsencrypt-issuer.yaml` config file by adding your own email address, and apply:
 
     kubectl apply -f k8s-infra/letsencrypt-issuers.yaml
 
-### 9. Deploy a Kubernetes Resource
 
-Follow the setup steps in [./k8s-examples/README.md](./k8s-examples/README.md) to deploy your service and
-verify that it becomes accessible via the DNS pretty-name.
+### 9. Deploy Externally Accessible Kubernetes Resource
+
+Follow the setup steps in [./k8s-examples/hello-kubernetes/README.md](./k8s-examples/hello-kubernetes/README.md) to
+deploy the `hello-kubernetes` services and verify that it becomes accessible via the DNS pretty-names with SSL.

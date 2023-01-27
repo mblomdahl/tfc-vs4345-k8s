@@ -4,12 +4,12 @@ module "vpc" {
 
   name = "${local.resource_prefix}-vpc"
 
-  cidr = "10.181.0.0/16"
+  cidr = var.vpc_cidr
   azs  = slice(data.aws_availability_zones.available.names, 0, 3)
 
-  public_subnets   = ["10.181.0.0/24", "10.181.1.0/24"]
-  private_subnets  = ["10.181.3.0/24", "10.181.4.0/24"]
-  database_subnets = ["10.181.6.0/24", "10.181.7.0/24"]
+  public_subnets   = [var.vpc_public_subnet_cidr_a, var.vpc_public_subnet_cidr_b]
+  private_subnets  = [var.vpc_private_subnet_cidr_a, var.vpc_private_subnet_cidr_b]
+  database_subnets = [var.vpc_database_subnet_cidr_a, var.vpc_database_subnet_cidr_b]
 
   enable_nat_gateway     = true
   single_nat_gateway     = true
@@ -19,11 +19,17 @@ module "vpc" {
   public_subnet_tags = {
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
     "kubernetes.io/role/elb"                      = 1
+    Tier                                          = "Public"
   }
 
   private_subnet_tags = {
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
     "kubernetes.io/role/internal-elb"             = 1
+    Tier                                          = "Private"
+  }
+
+  database_subnet_group_tags = {
+    Tier = "Database"
   }
 
   tags = {
@@ -32,5 +38,16 @@ module "vpc" {
     Owner          = var.common_owner_tag
     Purpose        = var.common_purpose_tag
     Stack          = var.common_stack_tag
+  }
+}
+
+data "aws_subnets" "private" {
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc.vpc_id]
+  }
+
+  tags = {
+    Tier = "Private"
   }
 }
