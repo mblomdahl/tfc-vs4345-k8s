@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-kubernetes-on-path
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: hello-kubernetes-on-path
+  template:
+    metadata:
+      labels:
+        name: hello-kubernetes-on-path
+    spec:
+      containers:
+        - name: app
+          image: paulbouwer/hello-kubernetes:1.10.1
+          env:
+            - name: MESSAGE
+              value: "Hello world, @mb-eks-cluster path!"
+            - name: RENDER_PATH_PREFIX
+              value: /hello-kubernetes/
+            - name: HANDLER_PATH_PREFIX
+              value: /hello-kubernetes/
+          ports:
+            - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-kubernetes-on-subdomain
+  namespace: default
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: hello-kubernetes-on-subdomain
+  template:
+    metadata:
+      labels:
+        name: hello-kubernetes-on-subdomain
+    spec:
+      containers:
+        - name: app
+          image: paulbouwer/hello-kubernetes:1.10.1
+          env:
+            - name: MESSAGE
+              value: "Hello world, @mb-eks-cluster subdomain!"
+          ports:
+            - containerPort: 8080
