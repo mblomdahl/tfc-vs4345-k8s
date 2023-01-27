@@ -4,11 +4,12 @@
 ## How to Deploy and Verify, Step by Step
 
 *Prerequisites:* Have the EKS cluster, Nginx Ingress Controller, and DNS configuration set up per the instructions in
-the [root README.md](../README.md).
+the [root README.md](../../README.md).
 
-Change directory to `./k8s-examples` and apply/verify the Deployment, Service, and Ingress K8s configs:
+Change directory to `./k8s-examples/hello-kubernetes/` and apply/verify the Deployment, Service, and
+Ingress K8s configs:
 
-    cd k8s-examples/
+    cd k8s-examples/hello-kubernetes/
     kubectl apply -f hello-kubernetes-deployments.yml
     kubectl get deployments -n default
 
@@ -19,7 +20,7 @@ Change directory to `./k8s-examples` and apply/verify the Deployment, Service, a
     kubectl describe ingress -n default
 
 Open the address in your browser and expect to be greeted with a "Hello world!" Kubernetes page with SSL encryption,
-deployed on the `/hello-kubernetes/` path (example URL [works on my computer](https://mb-eks.smithmicro.io/hello-kubernetes/)):
+deployed on the `/hello-kubernetes/` path (example URL [works](https://mb-eks.smithmicro.io/hello-kubernetes/)):
 
     open https://mb-eks.smithmicro.io/hello-kubernetes/
 
