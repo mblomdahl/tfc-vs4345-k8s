@@ -5,6 +5,7 @@ locals {
 
 data "aws_eks_cluster" "default" {
   name = local.cluster_name
+
   depends_on = [module.eks]
 }
 

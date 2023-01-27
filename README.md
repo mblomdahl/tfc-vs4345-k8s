@@ -37,10 +37,29 @@ see [our variable documentation](https://www.terraform.io/docs/cloud/workspaces/
 7. Verify your local configuration with `kubectl cluster-info`
 
 
-### 2. Configure the AWS Elastic File System Storage
+### 3. Configure the AWS Elastic Block Storage for EKS
 
-Configure persistent storage for EKS by following
-the [Amazon EFS CSI Driver User Guide](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html).
+Configure persistent storage using EBS for EKS by following
+the [Amazon EBS CSI Driver User Guide](https://docs.aws.amazon.com/eks/latest/userguide/ebs-csi.html), summarized below.
+
+Modify the `./k8s-infra/aws-ebs-csi-driver-service-account.yaml` manifest by
+replacing `"arn:aws:iam::878179636352:role/mb-eks-ebs-csi-driver-role"` with your own role ARN:
+
+    echo $(terraform output -raw iam_aws_ebs_csi_driver_service_account_arn)
+
+Apply the Kubernetes service account configuration for `ebs-csi-controller-sa` and the storage class manifest:
+
+    kubectl apply -f k8s-infra/aws-ebs-csi-driver-service-account.yaml
+    kubectl apply -f k8s-infra/aws-ebs-storageclass.yaml
+
+Follow the steps in [./k8s-examples/ebs-storage/README.md](./k8s-examples/ebs-storage/README.md) to
+verify that EBS persistent volumes and storage claims can be utilized in your cluster.
+
+
+### 3. Configure the AWS Elastic File System Storage
+
+Configure persistent storage using EFS for EKS by following
+the [Amazon EFS CSI Driver User Guide](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html), summarized below.
 
 Modify the `./k8s-infra/aws-efs-csi-driver-service-account.yaml` manifest by
 replacing `"arn:aws:iam::878179636352:role/mb-eks-efs-csi-driver-role"` with your own role ARN:
@@ -72,7 +91,7 @@ the filesystem ID from your environment and apply:
     kubectl apply -f k8s-infra/aws-efs-storageclass.yaml
 
 Follow the steps in [./k8s-examples/efs-storage/README.md](./k8s-examples/efs-storage/README.md) to
-verify persistent volumes and storage claims can be utilized in your cluster.
+verify that EFS persistent volumes and storage claims can be utilized in your cluster.
 
 
 ### 3. Configure the AWS Load Balancer Controller Add-On

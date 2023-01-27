@@ -10,6 +10,9 @@ module "eks" {
   cluster_endpoint_public_access = true
 
   cluster_addons = {
+    aws-ebs-csi-driver = {
+      most_recent = true
+    }
     coredns = {
       most_recent = true
     }
@@ -31,9 +34,9 @@ module "eks" {
 
       instance_types = [var.node_group_instance_type]
 
-      min_size     = 1
-      max_size     = 3
-      desired_size = 1
+      min_size     = 2
+      max_size     = 8
+      desired_size = 2
     }
 
     two = {
@@ -41,9 +44,9 @@ module "eks" {
 
       instance_types = [var.node_group_instance_type]
 
-      min_size     = 1
-      max_size     = 3
-      desired_size = 1
+      min_size     = 2
+      max_size     = 8
+      desired_size = 2
     }
   }
 
