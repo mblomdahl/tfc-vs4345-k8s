@@ -55,7 +55,7 @@ variable "eks_ami_type" {
 
 variable "node_group_instance_type" {
   description = "Type of AWS EKS node group instances to provision"
-  default     = "t3.small"
+  default     = "t3.medium"
 }
 
 variable "common_origin_tag" {

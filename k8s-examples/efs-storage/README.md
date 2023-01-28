@@ -1,5 +1,5 @@
 
-# Deploying the Pod with PersistentVolumeClaim to AWS EKS
+# Deploying the Pod with EFS PersistentVolumeClaim to AWS EKS
 
 ## How to Deploy and Verify, Step by Step
 

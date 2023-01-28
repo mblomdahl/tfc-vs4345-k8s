@@ -31,12 +31,17 @@ output "cluster_oidc_arn" {
 
 output "iam_aws_load_balancer_service_account_arn" {
   description = "AWS IAM ARN for the aws-load-balancer-controller SA"
-  value       = aws_iam_role.aws-load-balancer-controller-iam-role.arn
+  value       = aws_iam_role.aws-load-balancer-controller-role.arn
 }
 
 output "iam_aws_efs_csi_driver_service_account_arn" {
   description = "AWS IAM ARN for the efs-csi-controller-sa SA"
   value       = aws_iam_role.aws-eks-efs-csi-driver-role.arn
+}
+
+output "iam_aws_ebs_csi_driver_service_account_arn" {
+  description = "AWS IAM ARN for the ebs-csi-controller-sa SA"
+  value       = aws_iam_role.aws-eks-ebs-csi-driver-role.arn
 }
 
 output "efs_fs_id" {
