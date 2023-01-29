@@ -1,0 +1,75 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: location-postgres-conn
+  namespace: viewspot
+data: {}
+---
+apiVersion: services.k8s.aws/v1alpha1
+kind: FieldExport
+metadata:
+  name: location-postgres-host
+  namespace: viewspot
+spec:
+  to:
+    name: location-postgres-conn
+    namespace: viewspot
+    kind: configmap
+  from:
+    path: ".status.endpoint.address"
+    resource:
+      group: rds.services.k8s.aws
+      kind: DBInstance
+      name: location-postgres
+---
+apiVersion: services.k8s.aws/v1alpha1
+kind: FieldExport
+metadata:
+  name: location-postgres-port
+  namespace: viewspot
+spec:
+  to:
+    name: location-postgres-conn
+    namespace: viewspot
+    kind: configmap
+  from:
+    path: ".status.endpoint.port"
+    resource:
+      group: rds.services.k8s.aws
+      kind: DBInstance
+      name: location-postgres
+---
+apiVersion: services.k8s.aws/v1alpha1
+kind: FieldExport
+metadata:
+  name: location-postgres-user
+  namespace: viewspot
+spec:
+  to:
+    name: location-postgres-conn
+    namespace: viewspot
+    kind: configmap
+  from:
+    path: ".spec.masterUsername"
+    resource:
+      group: rds.services.k8s.aws
+      kind: DBInstance
+      name: location-postgres
+---
+apiVersion: services.k8s.aws/v1alpha1
+kind: FieldExport
+metadata:
+  name: location-postgres-dbname
+  namespace: viewspot
+spec:
+  to:
+    name: location-postgres-conn
+    namespace: viewspot
+    kind: configmap
+  from:
+    path: ".spec.dbName"
+    resource:
+      group: rds.services.k8s.aws
+      kind: DBInstance
+      name: location-postgres
