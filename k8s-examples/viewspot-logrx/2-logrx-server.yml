@@ -1,0 +1,163 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-logrx
+  name: logrx-efs-claim
+  namespace: viewspot
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: efs-sc
+  resources:
+    requests:
+      storage: 40Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-logrx
+  name: logrx-server
+  namespace: viewspot
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: logrx-server
+  template:
+    metadata:
+      labels:
+        name: logrx-server
+    spec:
+      imagePullSecrets:
+        - name: viewspot-artifactory-ro
+      containers:
+        - name: app
+          image: smithmicro-viewspot-docker-release-local.jfrog.io/viewspot-logrx-server:6.0.0p1
+          imagePullPolicy: IfNotPresent
+          command: [ "/bin/sh" ]
+          args: [ "-c", "gunicorn logrx:app" ]
+          env:
+            # Application-specific
+            - name: LOGRX_QS_OUTPUT_DIR
+              value: /data
+            - name: LOGRX_ATTCUAT_AUDIT_LOG_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: logrx-server-config
+                  key: LOGRX_ATTCUAT_AUDIT_LOG_ENABLED
+            - name: LOGRX_ATTCUAT_AUDIT_LOG_ASLA_LOG_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: logrx-server-config
+                  key: LOGRX_ATTCUAT_AUDIT_LOG_ASLA_LOG_ID
+            - name: LOGRX_QA_MODE_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: logrx-server-config
+                  key: LOGRX_QA_MODE_ENABLED
+            - name: LOGRX_API_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: logrx-api-access-key
+                  key: access_key
+            - name: LOGRX_KAFKA_BROKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: logrx-server-config
+                  key: LOGRX_KAFKA_BROKERS
+            - name: LOGRX_KAFKA_TOPIC_VBIv1
+              valueFrom:
+                configMapKeyRef:
+                  name: logrx-server-config
+                  key: LOGRX_KAFKA_TOPIC_VBIv1
+            - name: LOGRX_KAFKA_TOPIC_VBIv2
+              valueFrom:
+                configMapKeyRef:
+                  name: logrx-server-config
+                  key: LOGRX_KAFKA_TOPIC_VBIv2
+            - name: LOGRX_KAFKA_TOPIC_VBIv3
+              valueFrom:
+                configMapKeyRef:
+                  name: logrx-server-config
+                  key: LOGRX_KAFKA_TOPIC_VBIv3
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+          volumeMounts:
+            - name: logrx-persistent-storage
+              mountPath: /data
+      volumes:
+        - name: logrx-persistent-storage
+          persistentVolumeClaim:
+            claimName: logrx-efs-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-logrx
+  name: logrx-server
+  namespace: viewspot
+spec:
+  selector:
+    name: logrx-server
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-logrx
+  name: logrx-server
+  namespace: viewspot
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-production
+spec:
+  tls:
+    - hosts:
+        - viewspot-logrx.mb-eks.smithmicro.io
+      secretName: viewspot-logrx-tls-secret
+  rules:
+    - host: viewspot-logrx.mb-eks.smithmicro.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: logrx-server
+                port:
+                  number: 80

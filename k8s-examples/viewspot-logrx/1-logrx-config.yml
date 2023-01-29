@@ -1,0 +1,29 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-logrx
+  name: logrx-server-config
+  namespace: viewspot
+data:
+  LOGRX_ATTCUAT_AUDIT_LOG_ENABLED: "false"
+  LOGRX_ATTCUAT_AUDIT_LOG_ASLA_LOG_ID: ""
+  LOGRX_QA_MODE_ENABLED: "false"
+  LOGRX_KAFKA_BROKERS: ""
+  LOGRX_KAFKA_TOPIC_VBIv1: ""
+  LOGRX_KAFKA_TOPIC_VBIv2: ""
+  LOGRX_KAFKA_TOPIC_VBIv3: ""
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-logrx
+  name: logrx-cron-config
+  namespace: viewspot
+data:
+  LOGRX_S3_BUCKET: s3://logrx
+  LOGRX_S3_UPLOAD_SCRIPT: compress_and_copy.sh
+  LOGRX_QS_LOGS_DIR: /opt/viewspot/logrx/data/qs_logs
+  LOGRX_QS_FILE_RETENTION_MINUTES: "10080"
