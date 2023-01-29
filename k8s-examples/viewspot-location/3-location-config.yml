@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-location
+  name: location-service-config
+  namespace: viewspot
+data:
+  AUTH0_TENANT_DOMAIN: viewspot-server-dev.eu.auth0.com
+  AUTH0_API_EXPLORER_TOKEN_MAX_EXPIRATION_SEC: "30"
+  AUTH0_CONNECTION_AUTH0_USER_DB_ENABLED: "true"
+  CACHE_TTL_SEC_LOCATION_V1: "1"

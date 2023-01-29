@@ -1,0 +1,185 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-location
+  name: location-service
+  namespace: viewspot
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: location-service
+  template:
+    metadata:
+      labels:
+        name: location-service
+    spec:
+      imagePullSecrets:
+        - name: viewspot-artifactory-ro
+      containers:
+        - name: app
+          image: smithmicro-viewspot-docker-release-local.jfrog.io/viewspot-location-service:6.3.0
+          imagePullPolicy: IfNotPresent
+          env:
+            # Infra variables
+            - name: PG_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: location-postgres-conn
+                  key: "viewspot.location-postgres-host"
+            - name: PG_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: location-postgres-conn
+                  key: "viewspot.location-postgres-port"
+            - name: PG_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: location-postgres-conn
+                  key: "viewspot.location-postgres-dbname"
+            - name: PG_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: location-postgres-conn
+                  key: "viewspot.location-postgres-user"
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "location-postgres-password"
+                  key: password
+            # Application-specific
+            - name: APP_DOMAIN
+              value: viewspot-location.mb-eks.smithmicro.io
+            - name: LOG_LEVELS
+              value: error,warn,log
+            - name: NO_COLOR
+              value: "true"
+            - name: WEB_SERVER_HOST
+              value: 0.0.0.0
+            - name: WEB_SERVER_PORT
+              value: "3000"
+            - name: HEALTH_INDICATOR_MEMORY_HEAP_MB
+              value: "512"
+            - name: HEALTH_INDICATOR_MEMORY_RSS_MB
+              value: "512"
+            - name: HEALTH_INDICATOR_DATABASE_TIMEOUT_MS
+              value: "550"
+            - name: SERVER_KILL_HEALTH_ERROR_THRESHOLD
+              value: "3"
+            - name: DATABASE_TYPE
+              value: postgres
+            - name: DATABASE_URL
+              value: postgres://$(PG_USER):$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)
+            - name: DATABASE_DROP_SCHEMA
+              value: "false"
+            - name: DATABASE_SYNCHRONIZE
+              value: "false"
+            - name: DATABASE_MIGRATIONS_RUN
+              value: "true"
+            - name: AUTH0_TENANT_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: location-service-config
+                  key: AUTH0_TENANT_DOMAIN
+            - name: AUTH0_API_EXPLORER_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: location-auth0-mgmt-api
+                  key: client_id
+            - name: AUTH0_API_EXPLORER_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: location-auth0-mgmt-api
+                  key: client_secret
+            - name: AUTH0_CONNECTION_AUTH0_USER_DB_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: location-service-config
+                  key: AUTH0_CONNECTION_AUTH0_USER_DB_ENABLED
+            - name: AUTH0_CONNECTION_GOOGLE_OAUTH2_ENABLED
+              value: "false"
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: location-session-secret
+                  key: secret
+            - name: SESSION_EXPIRATION_HOURS
+              value: "120"
+            - name: CACHE_TTL_SEC_LOCATION_V1
+              valueFrom:
+                configMapKeyRef:
+                  name: location-service-config
+                  key: CACHE_TTL_SEC_LOCATION_V1
+          ports:
+            - name: http
+              containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /admin/health
+              port: http
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /admin/health
+              port: http
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-location
+  name: location-service
+  namespace: viewspot
+spec:
+  selector:
+    name: location-service
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-location
+  name: location-service
+  namespace: viewspot
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-production
+spec:
+  tls:
+    - hosts:
+        - viewspot-location.mb-eks.smithmicro.io
+      secretName: viewspot-location-tls-secret
+  rules:
+    - host: viewspot-location.mb-eks.smithmicro.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: location-service
+                port:
+                  number: 80

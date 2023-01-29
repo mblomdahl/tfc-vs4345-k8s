@@ -28,9 +28,11 @@ module "vpc" {
     Tier                                          = "Private"
   }
 
-  database_subnet_group_tags = {
+  database_subnet_tags = {
     Tier = "Database"
   }
+
+  database_subnet_group_name = "${local.resource_prefix}-rds-subnet-group"
 
   tags = {
     Origin         = var.common_origin_tag
@@ -49,5 +51,16 @@ data "aws_subnets" "private" {
 
   tags = {
     Tier = "Private"
+  }
+}
+
+data "aws_subnets" "database" {
+  filter {
+    name   = "vpc-id"
+    values = [module.vpc.vpc_id]
+  }
+
+  tags = {
+    Tier = "Database"
   }
 }

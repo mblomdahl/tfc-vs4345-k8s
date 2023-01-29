@@ -45,7 +45,7 @@ the [Amazon EBS CSI Driver User Guide](https://docs.aws.amazon.com/eks/latest/us
 Modify the `./k8s-infra/aws-ebs-csi-driver-service-account.yaml` manifest by
 replacing `"arn:aws:iam::878179636352:role/mb-eks-ebs-csi-driver-role"` with your own role ARN:
 
-    echo $(terraform output -raw iam_aws_ebs_csi_driver_service_account_arn)
+    echo $(terraform output -raw ebs_csi_driver_service_account_iam_role_arn)
 
 Apply the Kubernetes service account configuration for `ebs-csi-controller-sa` and the storage class manifest:
 
@@ -64,7 +64,7 @@ the [Amazon EFS CSI Driver User Guide](https://docs.aws.amazon.com/eks/latest/us
 Modify the `./k8s-infra/aws-efs-csi-driver-service-account.yaml` manifest by
 replacing `"arn:aws:iam::878179636352:role/mb-eks-efs-csi-driver-role"` with your own role ARN:
 
-    echo $(terraform output -raw iam_aws_efs_csi_driver_service_account_arn)
+    echo $(terraform output -raw efs_csi_driver_service_account_iam_role_arn)
 
 Apply the Kubernetes service account configuration for `efs-csi-controller-sa`:
 
@@ -103,7 +103,7 @@ summarized below.
 Modify the `./k8s-infra/aws-load-balancer-controller-service-account.yaml` manifest by
 replacing `"arn:aws:iam::878179636352:role/mb-eks-load-balancer-controller-role"` with your own role ARN:
 
-    echo $(terraform output -raw iam_aws_load_balancer_service_account_arn)
+    echo $(terraform output -raw aws_load_balancer_service_account_iam_role_arn)
 
 Apply the Kubernetes service account configuration for `aws-load-balancer-controller`:
 
@@ -134,7 +134,7 @@ Example success output:
     "aws-load-balancer-controller   2/2     2            2           22h"
 
 
-### 4. Deploy the Nginx Ingress Controller for Kubernetes and Verify
+### 4. Configure the Nginx Ingress Controller for Kubernetes and Verify
 
 Deploy the Nginx Ingress Controller, "Option 1", by following the AWS
 [External Access to Kubernetes](https://aws.amazon.com/premiumsupport/knowledge-center/eks-access-kubernetes-services/)
@@ -155,7 +155,7 @@ Verify that your Kubernetes cluster have ingress classes `alb` and `nginx`:
     kubectl get ingressclass
 
 
-### 5. Configure DNS with Route53
+### 5. Configure DNS with Route53 and Verify
 
 Get the AWS Load Balancer Endpoint created by the Nginx Ingress Controller:
 
@@ -183,9 +183,6 @@ Change directory to `./dns` and apply the Terraform configuration:
     terraform plan
     terraform apply
 
-
-### 6. Verify the DNS Setup
-
 Verify that `nslookup` returns 2 records for `mb-eks.smithmicro.io`:
 
     nslookup mb-eks.smithmicro.io
@@ -195,7 +192,7 @@ Verify that `curl` receives a Nginx 404 response:
     curl -v http://mb-eks.smithmicro.io
 
 
-### 7. Install Cert-Manager in EKS
+### 6. Install Cert-Manager and Configure Certificate Issuer in EKS
 
 Install Cert-Manager using Helm:
 
@@ -206,15 +203,39 @@ Install Cert-Manager using Helm:
       --create-namespace \
       --set installCRDs=true
 
-
-### 8. Configure Certificate Issuer
-
-Modify the `./k8s-infra/letsencrypt-issuer.yaml` config file by adding your own email address, and apply:
+Modify the `./k8s-infra/letsencrypt-issuer.yaml` config file by adding your own email address and
+then apply your certificate issuer manifest:
 
     kubectl apply -f k8s-infra/letsencrypt-issuers.yaml
 
 
-### 9. Deploy Externally Accessible Kubernetes Resource
+### 7. Deploy Externally Accessible App to Verify Ingress, Routing and SSL
 
 Follow the setup steps in [./k8s-examples/hello-kubernetes/README.md](./k8s-examples/hello-kubernetes/README.md) to
 deploy the `hello-kubernetes` services and verify that it becomes accessible via the DNS pretty-names with SSL.
+
+
+### 8. Configure the ACK Service Controller for RDS
+
+Install the ACK controller following the
+[Install ACK Service Controller for RDS](https://aws-controllers-k8s.github.io/community/docs/tutorials/rds-example/)
+guide, summarized below.
+
+Identify your own IAM role ARN for the `ack-rds-controller` service account:
+
+    echo $(terraform output -raw ack_rds_controller_service_account_iam_role_arn)
+
+Install the `rds-chart` controller, replacing `"arn:aws:iam::878179636352:role/mb-eks-ack-rds-controller-role"` with
+your own role ARN and `"eu-north-1"` with your own region:
+
+    export ACK_RDS_CONTROLLER_IAM_ROLE_ARN=arn:aws:iam::878179636352:role/mb-eks-ack-rds-controller-role
+    export AWS_REGION=eu-north-1
+    helm install --create-namespace -n ack-system \
+      oci://public.ecr.aws/aws-controllers-k8s/rds-chart \
+      --version=v0.0.27 \
+      --generate-name \
+      --set=aws.region=$AWS_REGION \
+      --set=serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="$ACK_RDS_CONTROLLER_IAM_ROLE_ARN"
+
+Follow the setup steps in [./k8s-examples/viewspot-location/README.md](./k8s-examples/viewspot-location/README.md) to
+deploy a feature complete Node application with persistent storage in a Postgres database on RDS.
