@@ -1,6 +1,6 @@
 variable "resource_prefix" {
   description = "Prefix for AWS EKS resources (VPCs, EKS cluster/namespace)"
-  default     = "mb-eks"
+  default  = "mb-eks"
 }
 
 variable "account_id" {
