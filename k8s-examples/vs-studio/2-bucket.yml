@@ -3,24 +3,24 @@ apiVersion: s3.services.k8s.aws/v1alpha1
 kind: Bucket
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-s3-bucket
-  namespace: viewspot
+  namespace: vs
 spec:
-  name: viewspot-studio-mb-eks
+  name: mb-eks-vs-studio
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: studio-s3-bucket
-  namespace: viewspot
+  namespace: vs
 data: {}
 ---
 apiVersion: services.k8s.aws/v1alpha1
 kind: FieldExport
 metadata:
   name: studio-s3-bucket
-  namespace: viewspot
+  namespace: vs
 spec:
   to:
     name: studio-s3-bucket

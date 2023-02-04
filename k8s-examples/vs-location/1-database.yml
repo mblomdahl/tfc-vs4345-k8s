@@ -3,20 +3,20 @@ apiVersion: rds.services.k8s.aws/v1alpha1
 kind: DBInstance
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-location
+    app.kubernetes.io/name: vs-location
   name: location-postgres
-  namespace: viewspot
+  namespace: vs
 spec:
   allocatedStorage: 20
   autoMinorVersionUpgrade: true
   dbInstanceClass: db.t4g.micro
-  dbInstanceIdentifier: mb-eks-viewspot-location-rds-postgres
+  dbInstanceIdentifier: mb-eks-vs-location-rds-postgres
   dbName: mb_eks_location
   dbSubnetGroupName: mb-eks-rds-subnet-group
   engine: postgres
   engineVersion: "14"
   masterUsername: location_service
   masterUserPassword:
-    namespace: viewspot
+    namespace: vs
     name: location-postgres-password
     key: password

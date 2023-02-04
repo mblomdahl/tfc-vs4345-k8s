@@ -3,7 +3,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot
-  name: viewspot
+    app.kubernetes.io/name: vs
+  name: vs
   annotations:
     services.k8s.aws/default-region: eu-north-1

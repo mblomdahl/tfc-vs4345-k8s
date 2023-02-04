@@ -3,9 +3,9 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-sa
-  namespace: viewspot
+  namespace: vs
   annotations:
     eks.amazonaws.com/role-arn: arn:aws:iam::878179636352:role/mb-eks-viewspot-studio-sa-role
 ---
@@ -13,9 +13,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-server-service
-  namespace: viewspot
+  namespace: vs
 spec:
   replicas: 2
   strategy:
@@ -47,22 +47,22 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: studio-postgres-conn
-                  key: "viewspot.studio-postgres-host"
+                  key: "vs.studio-postgres-host"
             - name: PG_PORT
               valueFrom:
                 configMapKeyRef:
                   name: studio-postgres-conn
-                  key: "viewspot.studio-postgres-port"
+                  key: "vs.studio-postgres-port"
             - name: PG_DB_NAME
               valueFrom:
                 configMapKeyRef:
                   name: studio-postgres-conn
-                  key: "viewspot.studio-postgres-dbname"
+                  key: "vs.studio-postgres-dbname"
             - name: PG_USER
               valueFrom:
                 configMapKeyRef:
                   name: studio-postgres-conn
-                  key: "viewspot.studio-postgres-user"
+                  key: "vs.studio-postgres-user"
             - name: PG_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -106,7 +106,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: studio-s3-bucket
-                  key: "viewspot.studio-s3-bucket"
+                  key: "vs.studio-s3-bucket"
             - name: DEFAULT_USER_EMAIL
               valueFrom:
                 secretKeyRef:
@@ -278,9 +278,9 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-server-service
-  namespace: viewspot
+  namespace: vs
 spec:
   selector:
     name: studio-server-service

@@ -3,21 +3,21 @@ apiVersion: rds.services.k8s.aws/v1alpha1
 kind: DBInstance
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-postgres
-  namespace: viewspot
+  namespace: vs
 spec:
   allocatedStorage: 20
   autoMinorVersionUpgrade: true
   dbInstanceClass: db.t4g.micro
-  dbInstanceIdentifier: mb-eks-viewspot-studio-rds-postgres
+  dbInstanceIdentifier: mb-eks-vs-studio-rds-postgres
   dbName: mb_eks_studio
   dbSubnetGroupName: mb-eks-rds-subnet-group
   engine: postgres
   engineVersion: "14"
   masterUsername: studio
   masterUserPassword:
-    namespace: viewspot
+    namespace: vs
     name: studio-postgres-password
     key: password
 ---
@@ -25,18 +25,18 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: studio-postgres-conn
-  namespace: viewspot
+  namespace: vs
 data: {}
 ---
 apiVersion: services.k8s.aws/v1alpha1
 kind: FieldExport
 metadata:
   name: studio-postgres-host
-  namespace: viewspot
+  namespace: vs
 spec:
   to:
     name: studio-postgres-conn
-    namespace: viewspot
+    namespace: vs
     kind: configmap
   from:
     path: ".status.endpoint.address"
@@ -49,11 +49,11 @@ apiVersion: services.k8s.aws/v1alpha1
 kind: FieldExport
 metadata:
   name: studio-postgres-port
-  namespace: viewspot
+  namespace: vs
 spec:
   to:
     name: studio-postgres-conn
-    namespace: viewspot
+    namespace: vs
     kind: configmap
   from:
     path: ".status.endpoint.port"
@@ -66,11 +66,11 @@ apiVersion: services.k8s.aws/v1alpha1
 kind: FieldExport
 metadata:
   name: studio-postgres-user
-  namespace: viewspot
+  namespace: vs
 spec:
   to:
     name: studio-postgres-conn
-    namespace: viewspot
+    namespace: vs
     kind: configmap
   from:
     path: ".spec.masterUsername"
@@ -83,11 +83,11 @@ apiVersion: services.k8s.aws/v1alpha1
 kind: FieldExport
 metadata:
   name: studio-postgres-dbname
-  namespace: viewspot
+  namespace: vs
 spec:
   to:
     name: studio-postgres-conn
-    namespace: viewspot
+    namespace: vs
     kind: configmap
   from:
     path: ".spec.dbName"

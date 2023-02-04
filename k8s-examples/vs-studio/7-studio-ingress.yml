@@ -3,9 +3,9 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-ingress
-  namespace: viewspot
+  namespace: vs
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-production
@@ -13,10 +13,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - viewspot-studio.mb-eks.smithmicro.io
-      secretName: viewspot-studio-tls-secret
+        - vs-studio.eks.mabl.online
+      secretName: vs-studio-tls-secret
   rules:
-    - host: viewspot-studio.mb-eks.smithmicro.io
+    - host: vs-studio.eks.mabl.online
       http:
         paths:
           - path: /api/config/
@@ -26,7 +26,7 @@ spec:
                 name: studio-config-service
                 port:
                   number: 80
-    - host: viewspot-studio.mb-eks.smithmicro.io
+    - host: vs-studio.eks.mabl.online
       http:
         paths:
           - path: /

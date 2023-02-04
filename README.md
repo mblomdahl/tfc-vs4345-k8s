@@ -240,7 +240,7 @@ your own role ARN and `"eu-north-1"` with your own region:
       --set=aws.region=$AWS_REGION \
       --set=serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="$ACK_RDS_CONTROLLER_IAM_ROLE_ARN"
 
-Follow the setup steps in [./k8s-examples/viewspot-location/README.md](./k8s-examples/viewspot-location/README.md) to
+Follow the setup steps in [./k8s-examples/vs-location/README.md](./k8s-examples/vs-location/README.md) to
 deploy a feature complete Node application with persistent storage in a Postgres database on RDS.
 
 
@@ -266,5 +266,5 @@ your own role ARN and `"eu-north-1"` with your own region:
       --set=aws.region=$AWS_REGION \
       --set=serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="$ACK_S3_CONTROLLER_IAM_ROLE_ARN"
 
-Follow the setup steps in [./k8s-examples/viewspot-studio/README.md](./k8s-examples/viewspot-studio/README.md) to
+Follow the setup steps in [./k8s-examples/vs-studio/README.md](./k8s-examples/vs-studio/README.md) to
 deploy a feature complete Node application with binary assets on S3.

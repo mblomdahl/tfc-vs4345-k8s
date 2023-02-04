@@ -3,18 +3,18 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: location-postgres-conn
-  namespace: viewspot
+  namespace: vs
 data: {}
 ---
 apiVersion: services.k8s.aws/v1alpha1
 kind: FieldExport
 metadata:
   name: location-postgres-host
-  namespace: viewspot
+  namespace: vs
 spec:
   to:
     name: location-postgres-conn
-    namespace: viewspot
+    namespace: vs
     kind: configmap
   from:
     path: ".status.endpoint.address"
@@ -27,11 +27,11 @@ apiVersion: services.k8s.aws/v1alpha1
 kind: FieldExport
 metadata:
   name: location-postgres-port
-  namespace: viewspot
+  namespace: vs
 spec:
   to:
     name: location-postgres-conn
-    namespace: viewspot
+    namespace: vs
     kind: configmap
   from:
     path: ".status.endpoint.port"
@@ -44,11 +44,11 @@ apiVersion: services.k8s.aws/v1alpha1
 kind: FieldExport
 metadata:
   name: location-postgres-user
-  namespace: viewspot
+  namespace: vs
 spec:
   to:
     name: location-postgres-conn
-    namespace: viewspot
+    namespace: vs
     kind: configmap
   from:
     path: ".spec.masterUsername"
@@ -61,11 +61,11 @@ apiVersion: services.k8s.aws/v1alpha1
 kind: FieldExport
 metadata:
   name: location-postgres-dbname
-  namespace: viewspot
+  namespace: vs
 spec:
   to:
     name: location-postgres-conn
-    namespace: viewspot
+    namespace: vs
     kind: configmap
   from:
     path: ".spec.dbName"

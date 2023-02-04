@@ -3,9 +3,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-config-service-config
-  namespace: viewspot
+  namespace: vs
 data:
   CACHE_TTL_SEC_CONFIG_V1: "1"
 ---
@@ -13,13 +13,13 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-server-service-config
-  namespace: viewspot
+  namespace: vs
 data:
   AUTH0_TENANT_DOMAIN: viewspot-server-dev.eu.auth0.com
   AUTH0_VIEWSPOT_PERMISSIONS_ENABLED: users,roles,pricing,stores,devices,content,analytics,settings
-  EXTERNAL_URI: https://viewspot-studio.mb-eks.smithmicro.io
+  EXTERNAL_URI: https://vs-studio.eks.mabl.online
   AWS_REGION: eu-north-1
   MAILER_FROM: noreply@smithmicro.io
   MAILER_SMTP_SECURE: "true"
@@ -30,9 +30,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-nginx-proxy-conf
-  namespace: viewspot
+  namespace: vs
 data:
   default.conf: |
     proxy_cache_path  /mnt/nginx-proxy-cache/caches levels=1:2 keys_zone=nginx-proxy-cache:10m max_size=20g inactive=30d use_temp_path=off;

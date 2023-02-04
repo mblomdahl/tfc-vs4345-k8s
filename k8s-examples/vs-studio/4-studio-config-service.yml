@@ -3,9 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-config-service
-  namespace: viewspot
+  namespace: vs
 spec:
   replicas: 2
   strategy:
@@ -36,22 +36,22 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: studio-postgres-conn
-                  key: "viewspot.studio-postgres-host"
+                  key: "vs.studio-postgres-host"
             - name: PG_PORT
               valueFrom:
                 configMapKeyRef:
                   name: studio-postgres-conn
-                  key: "viewspot.studio-postgres-port"
+                  key: "vs.studio-postgres-port"
             - name: PG_DB_NAME
               valueFrom:
                 configMapKeyRef:
                   name: studio-postgres-conn
-                  key: "viewspot.studio-postgres-dbname"
+                  key: "vs.studio-postgres-dbname"
             - name: PG_USER
               valueFrom:
                 configMapKeyRef:
                   name: studio-postgres-conn
-                  key: "viewspot.studio-postgres-user"
+                  key: "vs.studio-postgres-user"
             - name: PG_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -59,9 +59,9 @@ spec:
                   key: password
             # Application-specific
             - name: APP_NAME
-              value: viewspot-studio.mb-eks.smithmicro.io_config
+              value: vs-studio.eks.mabl.online_config
             - name: APP_DOMAIN
-              value: viewspot-studio.mb-eks.smithmicro.io
+              value: vs-studio.eks.mabl.online
             - name: LOG_LEVELS
               value: error,warn,log
             - name: NO_COLOR
@@ -126,9 +126,9 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-config-service
-  namespace: viewspot
+  namespace: vs
 spec:
   selector:
     name: studio-config-service

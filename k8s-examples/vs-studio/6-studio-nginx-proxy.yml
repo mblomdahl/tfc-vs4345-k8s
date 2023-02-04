@@ -3,9 +3,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-nginx-proxy-cache-efs-claim
-  namespace: viewspot
+  namespace: vs
 spec:
   accessModes:
     - ReadWriteMany
@@ -18,9 +18,9 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-nginx-proxy
-  namespace: viewspot
+  namespace: vs
 spec:
   selector:
     matchLabels:
@@ -97,9 +97,9 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-studio
+    app.kubernetes.io/name: vs-studio
   name: studio-nginx-proxy
-  namespace: viewspot
+  namespace: vs
 spec:
   selector:
     name: studio-nginx-proxy
