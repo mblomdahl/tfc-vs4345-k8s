@@ -35,6 +35,9 @@ see [our variable documentation](https://www.terraform.io/docs/cloud/workspaces/
        aws --profile=$AWS_PROFILE eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
 7. Verify your local configuration with `kubectl cluster-info`
+8. Install the [Metrics Server](https://github.com/kubernetes-sigs/metrics-server):
+
+       kubectl apply -f k8s-infra/metrics-server.yaml
 
 
 ### 3. Configure the AWS Elastic Block Storage for EKS
@@ -237,5 +240,31 @@ your own role ARN and `"eu-north-1"` with your own region:
       --set=aws.region=$AWS_REGION \
       --set=serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="$ACK_RDS_CONTROLLER_IAM_ROLE_ARN"
 
-Follow the setup steps in [./k8s-examples/viewspot-location/README.md](./k8s-examples/viewspot-location/README.md) to
+Follow the setup steps in [./k8s-examples/vs-location/README.md](./k8s-examples/vs-location/README.md) to
 deploy a feature complete Node application with persistent storage in a Postgres database on RDS.
+
+
+### 9. Configure the ACK Service Controller for S3
+
+Install the ACK controller for S3 following the
+[Install an ACK Service Controller](https://aws-controllers-k8s.github.io/community/docs/user-docs/install/)
+guide, summarized below.
+
+Identify your own IAM role ARN for the `ack-rds-controller` service account:
+
+    echo $(terraform output -raw ack_s3_controller_service_account_iam_role_arn)
+
+Install the `rds-chart` controller, replacing `"arn:aws:iam::878179636352:role/mb-eks-ack-s3-controller-role"` with
+your own role ARN and `"eu-north-1"` with your own region:
+
+    export ACK_S3_CONTROLLER_IAM_ROLE_ARN=arn:aws:iam::878179636352:role/mb-eks-ack-s3-controller-role
+    export AWS_REGION=eu-north-1
+    helm install --create-namespace -n ack-system \
+      oci://public.ecr.aws/aws-controllers-k8s/s3-chart \
+      --version=v0.1.8 \
+      --generate-name \
+      --set=aws.region=$AWS_REGION \
+      --set=serviceAccount.annotations."eks\.amazonaws\.com/role-arn"="$ACK_S3_CONTROLLER_IAM_ROLE_ARN"
+
+Follow the setup steps in [./k8s-examples/vs-studio/README.md](./k8s-examples/vs-studio/README.md) to
+deploy a feature complete Node application with binary assets on S3.

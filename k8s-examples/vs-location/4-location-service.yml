@@ -3,9 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-location
+    app.kubernetes.io/name: vs-location
   name: location-service
-  namespace: viewspot
+  namespace: vs
 spec:
   replicas: 2
   strategy:
@@ -33,22 +33,22 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: location-postgres-conn
-                  key: "viewspot.location-postgres-host"
+                  key: "vs.location-postgres-host"
             - name: PG_PORT
               valueFrom:
                 configMapKeyRef:
                   name: location-postgres-conn
-                  key: "viewspot.location-postgres-port"
+                  key: "vs.location-postgres-port"
             - name: PG_DB_NAME
               valueFrom:
                 configMapKeyRef:
                   name: location-postgres-conn
-                  key: "viewspot.location-postgres-dbname"
+                  key: "vs.location-postgres-dbname"
             - name: PG_USER
               valueFrom:
                 configMapKeyRef:
                   name: location-postgres-conn
-                  key: "viewspot.location-postgres-user"
+                  key: "vs.location-postgres-user"
             - name: PG_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -56,7 +56,7 @@ spec:
                   key: password
             # Application-specific
             - name: APP_DOMAIN
-              value: viewspot-location.mb-eks.smithmicro.io
+              value: vs-location.eks.mabl.online
             - name: LOG_LEVELS
               value: error,warn,log
             - name: NO_COLOR
@@ -136,18 +136,18 @@ spec:
             periodSeconds: 15
           resources:
             limits:
-              memory: 1Gi
+              memory: 512Mi
             requests:
-              cpu: 50m
-              memory: 128Mi
+              cpu: 5m
+              memory: 64Mi
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-location
+    app.kubernetes.io/name: vs-location
   name: location-service
-  namespace: viewspot
+  namespace: vs
 spec:
   selector:
     name: location-service
@@ -161,19 +161,19 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-location
+    app.kubernetes.io/name: vs-location
   name: location-service
-  namespace: viewspot
+  namespace: vs
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-production
 spec:
   tls:
     - hosts:
-        - viewspot-location.mb-eks.smithmicro.io
-      secretName: viewspot-location-tls-secret
+        - vs-location.eks.mabl.online
+      secretName: vs-location-tls-secret
   rules:
-    - host: viewspot-location.mb-eks.smithmicro.io
+    - host: vs-location.eks.mabl.online
       http:
         paths:
           - path: /

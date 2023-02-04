@@ -1,37 +1,38 @@
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: hello-kubernetes
-  namespace: default
+  labels:
+    app.kubernetes.io/name: vs-studio
+  name: studio-ingress
+  namespace: vs
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-production
-#    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: 300m
 spec:
   tls:
     - hosts:
-        - eks.mabl.se
-        - hello-kubernetes.k8s.mabl.online
-      secretName: hello-kubernetes-tls-secret
+        - vs-studio.eks.mabl.online
+      secretName: vs-studio-tls-secret
   rules:
-    - host: eks.mabl.se
+    - host: vs-studio.eks.mabl.online
       http:
         paths:
-          - path: /hello-kubernetes/
+          - path: /api/config/
             pathType: Prefix
             backend:
               service:
-                name: hello-kubernetes-on-path
+                name: studio-config-service
                 port:
                   number: 80
-    - host: hello-kubernetes.k8s.mabl.online
+    - host: vs-studio.eks.mabl.online
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: hello-kubernetes-on-subdomain
+                name: studio-nginx-proxy
                 port:
                   number: 80
-

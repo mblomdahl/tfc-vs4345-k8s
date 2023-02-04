@@ -3,9 +3,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-logrx
+    app.kubernetes.io/name: vs-logrx
   name: logrx-efs-claim
-  namespace: viewspot
+  namespace: vs
 spec:
   accessModes:
     - ReadWriteMany
@@ -15,31 +15,29 @@ spec:
       storage: 40Gi
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-logrx
+    app.kubernetes.io/name: vs-logrx
   name: logrx-server
-  namespace: viewspot
+  namespace: vs
 spec:
-  replicas: 2
-  strategy:
-    rollingUpdate:
-      maxSurge: 100%
-      maxUnavailable: 0
-    type: RollingUpdate
   selector:
     matchLabels:
       name: logrx-server
+  serviceName: logrx-server
+  replicas: 2
+  minReadySeconds: 3
   template:
     metadata:
       labels:
         name: logrx-server
     spec:
+      terminationGracePeriodSeconds: 3
       imagePullSecrets:
         - name: viewspot-artifactory-ro
       containers:
-        - name: app
+        - name: logrx-server
           image: smithmicro-viewspot-docker-release-local.jfrog.io/viewspot-logrx-server:6.0.0p1
           imagePullPolicy: IfNotPresent
           command: [ "/bin/sh" ]
@@ -107,29 +105,40 @@ spec:
             periodSeconds: 15
           resources:
             limits:
-              memory: 1Gi
+              memory: 512Mi
             requests:
-              cpu: 50m
-              memory: 128Mi
+              cpu: 5m
+              memory: 64Mi
           volumeMounts:
-            - name: logrx-persistent-storage
+            - name: data
               mountPath: /data
+            - name: shared-efs
+              mountPath: /efs/logrx-data
       volumes:
-        - name: logrx-persistent-storage
+        - name: shared-efs
           persistentVolumeClaim:
             claimName: logrx-efs-claim
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: gp2
+        resources:
+          requests:
+            storage: 20Gi
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-logrx
+    app.kubernetes.io/name: vs-logrx
   name: logrx-server
-  namespace: viewspot
+  namespace: vs
 spec:
   selector:
     name: logrx-server
-  type: NodePort
+  clusterIP: None
   ports:
     - port: 80
       targetPort: http
@@ -139,19 +148,19 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   labels:
-    app.kubernetes.io/name: viewspot-logrx
+    app.kubernetes.io/name: vs-logrx
   name: logrx-server
-  namespace: viewspot
+  namespace: vs
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-production
 spec:
   tls:
     - hosts:
-        - viewspot-logrx.mb-eks.smithmicro.io
-      secretName: viewspot-logrx-tls-secret
+        - vs-logrx.eks.mabl.online
+      secretName: vs-logrx-tls-secret
   rules:
-    - host: viewspot-logrx.mb-eks.smithmicro.io
+    - host: vs-logrx.eks.mabl.online
       http:
         paths:
           - path: /

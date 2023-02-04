@@ -29,3 +29,6 @@ terraform.rc
 # IDE
 *.iml
 .idea
+
+# Secrets
+secrets/

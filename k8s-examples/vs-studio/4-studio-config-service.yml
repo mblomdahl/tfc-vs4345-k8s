@@ -1,0 +1,139 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: vs-studio
+  name: studio-config-service
+  namespace: vs
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: studio-config-service
+  template:
+    metadata:
+      labels:
+        name: studio-config-service
+    spec:
+      imagePullSecrets:
+        - name: viewspot-artifactory-ro
+      containers:
+        - name: app
+          image: smithmicro-viewspot-docker-release-local.jfrog.io/viewspot-pricing-server:6.4.1
+          imagePullPolicy: IfNotPresent
+          workingDir: /viewspot/studio/config
+          command: [ "node" ]
+          args: [ "dist/out-tsc/main" ]
+          env:
+            # Infra variables
+            - name: PG_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-postgres-conn
+                  key: "vs.studio-postgres-host"
+            - name: PG_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-postgres-conn
+                  key: "vs.studio-postgres-port"
+            - name: PG_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-postgres-conn
+                  key: "vs.studio-postgres-dbname"
+            - name: PG_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-postgres-conn
+                  key: "vs.studio-postgres-user"
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "studio-postgres-password"
+                  key: password
+            # Application-specific
+            - name: APP_NAME
+              value: vs-studio.eks.mabl.online_config
+            - name: APP_DOMAIN
+              value: vs-studio.eks.mabl.online
+            - name: LOG_LEVELS
+              value: error,warn,log
+            - name: NO_COLOR
+              value: "true"
+            - name: WEB_SERVER_HOST
+              value: 0.0.0.0
+            - name: WEB_SERVER_PORT
+              value: "3010"
+            - name: HEALTH_INDICATOR_MEMORY_HEAP_MB
+              value: "512"
+            - name: HEALTH_INDICATOR_MEMORY_RSS_MB
+              value: "512"
+            - name: HEALTH_INDICATOR_DATABASE_TIMEOUT_MS
+              value: "550"
+            - name: SERVER_KILL_HEALTH_ERROR_THRESHOLD
+              value: "3"
+            - name: DATABASE_TYPE
+              value: postgres
+            - name: DATABASE_URL
+              value: postgres://$(PG_USER):$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)
+            - name: DATABASE_DROP_SCHEMA
+              value: "false"
+            - name: DATABASE_SYNCHRONIZE
+              value: "false"
+            - name: DATABASE_MIGRATIONS_RUN
+              value: "true"
+            - name: ADMIN_API_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: studio-external-api-access-key
+                  key: access_key
+            - name: CACHE_TTL_SEC_CONFIG_V1
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-config-service-config
+                  key: CACHE_TTL_SEC_CONFIG_V1
+          ports:
+            - name: http
+              containerPort: 3010
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 5m
+              memory: 64Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: vs-studio
+  name: studio-config-service
+  namespace: vs
+spec:
+  selector:
+    name: studio-config-service
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
