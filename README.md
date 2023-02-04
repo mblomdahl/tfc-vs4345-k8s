@@ -35,6 +35,9 @@ see [our variable documentation](https://www.terraform.io/docs/cloud/workspaces/
        aws --profile=$AWS_PROFILE eks update-kubeconfig --region $AWS_REGION --name $CLUSTER_NAME
 
 7. Verify your local configuration with `kubectl cluster-info`
+8. Install the [Metrics Server](https://github.com/kubernetes-sigs/metrics-server):
+
+       kubectl apply -f k8s-infra/metrics-server.yaml
 
 
 ### 3. Configure the AWS Elastic Block Storage for EKS

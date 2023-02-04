@@ -16,7 +16,10 @@ resource "aws_iam_role" "aws-eks-viewspot-studio-sa-role" {
         Condition = {
           StringEquals = {
             "${module.eks.oidc_provider}:aud" : "sts.amazonaws.com",
-            "${module.eks.oidc_provider}:sub" : "system:serviceaccount:*:studio-sa"
+            "${module.eks.oidc_provider}:sub" : [
+              "system:serviceaccount:vs:studio-sa",
+              "system:serviceaccount:viewspot:studio-sa"
+            ]
           }
         }
       },
@@ -37,6 +40,11 @@ resource "aws_iam_role" "aws-eks-viewspot-studio-sa-role" {
           Effect   = "Allow"
           Action   = ["s3:*"]
           Resource = "arn:aws:s3:::*${var.resource_prefix}*"
+        },
+        {
+          Effect   = "Allow"
+          Action   = ["s3:*"]
+          Resource = "arn:aws:s3:::${var.resource_prefix}*"
         }
       ]
     })
