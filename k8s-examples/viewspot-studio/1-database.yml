@@ -1,0 +1,97 @@
+---
+apiVersion: rds.services.k8s.aws/v1alpha1
+kind: DBInstance
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-studio
+  name: studio-postgres
+  namespace: viewspot
+spec:
+  allocatedStorage: 20
+  autoMinorVersionUpgrade: true
+  dbInstanceClass: db.t4g.micro
+  dbInstanceIdentifier: mb-eks-viewspot-studio-rds-postgres
+  dbName: mb_eks_studio
+  dbSubnetGroupName: mb-eks-rds-subnet-group
+  engine: postgres
+  engineVersion: "14"
+  masterUsername: studio
+  masterUserPassword:
+    namespace: viewspot
+    name: studio-postgres-password
+    key: password
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: studio-postgres-conn
+  namespace: viewspot
+data: {}
+---
+apiVersion: services.k8s.aws/v1alpha1
+kind: FieldExport
+metadata:
+  name: studio-postgres-host
+  namespace: viewspot
+spec:
+  to:
+    name: studio-postgres-conn
+    namespace: viewspot
+    kind: configmap
+  from:
+    path: ".status.endpoint.address"
+    resource:
+      group: rds.services.k8s.aws
+      kind: DBInstance
+      name: studio-postgres
+---
+apiVersion: services.k8s.aws/v1alpha1
+kind: FieldExport
+metadata:
+  name: studio-postgres-port
+  namespace: viewspot
+spec:
+  to:
+    name: studio-postgres-conn
+    namespace: viewspot
+    kind: configmap
+  from:
+    path: ".status.endpoint.port"
+    resource:
+      group: rds.services.k8s.aws
+      kind: DBInstance
+      name: studio-postgres
+---
+apiVersion: services.k8s.aws/v1alpha1
+kind: FieldExport
+metadata:
+  name: studio-postgres-user
+  namespace: viewspot
+spec:
+  to:
+    name: studio-postgres-conn
+    namespace: viewspot
+    kind: configmap
+  from:
+    path: ".spec.masterUsername"
+    resource:
+      group: rds.services.k8s.aws
+      kind: DBInstance
+      name: studio-postgres
+---
+apiVersion: services.k8s.aws/v1alpha1
+kind: FieldExport
+metadata:
+  name: studio-postgres-dbname
+  namespace: viewspot
+spec:
+  to:
+    name: studio-postgres-conn
+    namespace: viewspot
+    kind: configmap
+  from:
+    path: ".spec.dbName"
+    resource:
+      group: rds.services.k8s.aws
+      kind: DBInstance
+      name: studio-postgres

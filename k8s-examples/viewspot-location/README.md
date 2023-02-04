@@ -6,7 +6,8 @@ set up per the instructions in the [root README.md](../../README.md).
 
 ## 1. Create the App Namespace and Database Credentials
 
-Change directory to `./k8s-examples/viewspot-location/` and create the namespace `"viewspot"`:
+Change directory to `./k8s-examples/viewspot-location/`, modify the `0-infra.yml` manifest by replacing `"eu-north-1"`
+with your own region and create the namespace `"viewspot"`:
 
     cd k8s-examples/viewspot-location/
     kubectl apply -f 0-infra.yml
@@ -83,7 +84,7 @@ deployment, service and ingress resources:
 
     kubectl get deployments -n viewspot
     kubectl get services -n viewspot
-    kubectl describe ingress -n viewspot
+    kubectl describe ingress location-service -n viewspot
 
 The `location-service` pods should be marked as ready 2/2 and the ingress should list the event message
 _"Successfully created Certificate viewspot-location-tls-secret"_.

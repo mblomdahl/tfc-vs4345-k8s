@@ -1,0 +1,110 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-studio
+  name: studio-nginx-proxy-cache-efs-claim
+  namespace: viewspot
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: efs-sc
+  resources:
+    requests:
+      storage: 40Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-studio
+  name: studio-nginx-proxy
+  namespace: viewspot
+spec:
+  selector:
+    matchLabels:
+      name: studio-nginx-proxy
+  serviceName: studio-nginx-proxy
+  replicas: 2
+  minReadySeconds: 1
+  template:
+    metadata:
+      labels:
+        name: studio-nginx-proxy
+    spec:
+      terminationGracePeriodSeconds: 3
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+        fsGroup: 0
+      containers:
+        - name: nginx
+          image: nginx
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /nginx-health
+              port: http
+            failureThreshold: 1
+            initialDelaySeconds: 1
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /nginx-health
+              port: http
+            failureThreshold: 1
+            initialDelaySeconds: 1
+            periodSeconds: 15
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+              readOnly: true
+            - name: cache
+              mountPath: /mnt/nginx-proxy-cache
+            - name: shared-efs
+              mountPath: /efs/nginx-proxy-cache
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: studio-nginx-proxy-conf
+            items:
+              - key: default.conf
+                path: default.conf
+        - name: shared-efs
+          persistentVolumeClaim:
+            claimName: studio-nginx-proxy-cache-efs-claim
+  volumeClaimTemplates:
+    - metadata:
+        name: cache
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: gp2
+        resources:
+          requests:
+            storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-studio
+  name: studio-nginx-proxy
+  namespace: viewspot
+spec:
+  selector:
+    name: studio-nginx-proxy
+  clusterIP: None
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP

@@ -20,13 +20,13 @@ Ingress K8s configs:
     kubectl describe ingress -n default
 
 Open the address in your browser and expect to be greeted with a "Hello world!" Kubernetes page with SSL encryption,
-deployed on the `/hello-kubernetes/` path (example URL [works](https://mb-eks.smithmicro.io/hello-kubernetes/)):
+deployed on the `/hello-kubernetes/` path (example URL [works](https://eks.mabl.se/hello-kubernetes/)):
 
-    open https://mb-eks.smithmicro.io/hello-kubernetes/
+    open https://eks.mabl.se/hello-kubernetes/
 
 Open the subdomain deployment address in your browser and again expect to be greeted with a "Hello world!" page with
 SSL encryption and a slightly different title message:
 
-    open https://hello-kubernetes.mb-eks.smithmicro.io/
+    open https://hello-kubernetes.k8s.mabl.online/
 
 Now go celebrate! :boom:

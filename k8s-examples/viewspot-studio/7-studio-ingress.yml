@@ -1,37 +1,38 @@
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: hello-kubernetes
-  namespace: default
+  labels:
+    app.kubernetes.io/name: viewspot-studio
+  name: studio-ingress
+  namespace: viewspot
   annotations:
     kubernetes.io/ingress.class: nginx
     cert-manager.io/cluster-issuer: letsencrypt-production
-#    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: 300m
 spec:
   tls:
     - hosts:
-        - eks.mabl.se
-        - hello-kubernetes.k8s.mabl.online
-      secretName: hello-kubernetes-tls-secret
+        - viewspot-studio.mb-eks.smithmicro.io
+      secretName: viewspot-studio-tls-secret
   rules:
-    - host: eks.mabl.se
+    - host: viewspot-studio.mb-eks.smithmicro.io
       http:
         paths:
-          - path: /hello-kubernetes/
+          - path: /api/config/
             pathType: Prefix
             backend:
               service:
-                name: hello-kubernetes-on-path
+                name: studio-config-service
                 port:
                   number: 80
-    - host: hello-kubernetes.k8s.mabl.online
+    - host: viewspot-studio.mb-eks.smithmicro.io
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: hello-kubernetes-on-subdomain
+                name: studio-nginx-proxy
                 port:
                   number: 80
-

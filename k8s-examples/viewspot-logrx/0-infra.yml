@@ -5,3 +5,5 @@ metadata:
   labels:
     app.kubernetes.io/name: viewspot
   name: viewspot
+  annotations:
+    services.k8s.aws/default-region: eu-north-1

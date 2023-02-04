@@ -1,0 +1,291 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-studio
+  name: studio-sa
+  namespace: viewspot
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::878179636352:role/mb-eks-viewspot-studio-sa-role
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-studio
+  name: studio-server-service
+  namespace: viewspot
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      name: studio-server-service
+  template:
+    metadata:
+      labels:
+        name: studio-server-service
+    spec:
+      serviceAccountName: studio-sa
+      imagePullSecrets:
+        - name: viewspot-artifactory-ro
+      containers:
+        - name: studio-server
+          image: smithmicro-viewspot-docker-release-local.jfrog.io/viewspot-pricing-server:6.4.1
+          imagePullPolicy: IfNotPresent
+          workingDir: /viewspot/studio/server
+          command: [ "node" ]
+          args: [ "dist/out-tsc/src/index.js" ]
+          env:
+            # Infra variables
+            - name: PG_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-postgres-conn
+                  key: "viewspot.studio-postgres-host"
+            - name: PG_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-postgres-conn
+                  key: "viewspot.studio-postgres-port"
+            - name: PG_DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-postgres-conn
+                  key: "viewspot.studio-postgres-dbname"
+            - name: PG_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-postgres-conn
+                  key: "viewspot.studio-postgres-user"
+            - name: PG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "studio-postgres-password"
+                  key: password
+            # Application-specific
+            - name: TYPEORM_URL
+              value: postgres://$(PG_USER):$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)
+            - name: TYPEORM_MAX_CONNECTIONS
+              value: "90"
+            - name: TYPEORM_LOGGING
+              value: error,warn,info
+            - name: LOG_LEVEL
+              value: info
+            - name: AUTH0_TENANT_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: AUTH0_TENANT_DOMAIN
+            - name: AUTH0_VIEWSPOT_PERMISSIONS_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: AUTH0_VIEWSPOT_PERMISSIONS_ENABLED
+            - name: AUTH0_API_EXPLORER_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: studio-auth0-mgmt-api
+                  key: client_id
+            - name: AUTH0_API_EXPLORER_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: studio-auth0-mgmt-api
+                  key: client_secret
+            - name: AWS_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: AWS_REGION
+            - name: AWS_S3_UPLOAD_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-s3-bucket
+                  key: "viewspot.studio-s3-bucket"
+            - name: DEFAULT_USER_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: studio-default-user
+                  key: email
+            - name: DEFAULT_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: studio-default-user
+                  key: password
+            - name: EXTERNAL_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: EXTERNAL_URI
+            - name: MAILER_FROM
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: MAILER_FROM
+            - name: MAILER_SMTP_SECURE
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: MAILER_SMTP_SECURE
+            - name: MAILER_SMTP_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: MAILER_SMTP_HOST
+            - name: MAILER_SMTP_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: MAILER_SMTP_PORT
+            - name: MAILER_SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: studio-smtp-user
+                  key: username
+            - name: MAILER_SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: studio-smtp-user
+                  key: password
+            - name: EXTERNAL_API_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: studio-external-api-access-key
+                  key: access_key
+          ports:
+            - name: http
+              containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 128Mi
+      initContainers:
+        - name: auth0-deploy
+          image: smithmicro-viewspot-docker-release-local.jfrog.io/viewspot-pricing-server:6.4.1
+          workingDir: /viewspot/studio/server
+          command: [ "node" ]
+          args: [ "dist/out-tsc/src/scripts/deployAuth0LoginPage.js" ]
+          env:
+            - name: AUTH0_TENANT_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: AUTH0_TENANT_DOMAIN
+            - name: AUTH0_API_EXPLORER_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: studio-auth0-mgmt-api
+                  key: client_id
+            - name: AUTH0_API_EXPLORER_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: studio-auth0-mgmt-api
+                  key: client_secret
+        - name: auth0-setup
+          image: smithmicro-viewspot-docker-release-local.jfrog.io/viewspot-pricing-server:6.4.1
+          workingDir: /viewspot/studio/server
+          command: [ "node" ]
+          args: [ "dist/out-tsc/src/scripts/setupAuth0.js" ]
+          env:
+            - name: AUTH0_TENANT_DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: AUTH0_TENANT_DOMAIN
+            - name: AUTH0_VIEWSPOT_PERMISSIONS_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: AUTH0_VIEWSPOT_PERMISSIONS_ENABLED
+            - name: AUTH0_API_EXPLORER_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: studio-auth0-mgmt-api
+                  key: client_id
+            - name: AUTH0_API_EXPLORER_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: studio-auth0-mgmt-api
+                  key: client_secret
+            - name: DEFAULT_USER_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: studio-default-user
+                  key: email
+            - name: DEFAULT_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: studio-default-user
+                  key: password
+            - name: EXTERNAL_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: EXTERNAL_URI
+            - name: MAILER_FROM
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: MAILER_FROM
+            - name: MAILER_SMTP_SECURE
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: MAILER_SMTP_SECURE
+            - name: MAILER_SMTP_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: MAILER_SMTP_HOST
+            - name: MAILER_SMTP_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: studio-server-service-config
+                  key: MAILER_SMTP_PORT
+            - name: MAILER_SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: studio-smtp-user
+                  key: username
+            - name: MAILER_SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: studio-smtp-user
+                  key: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-studio
+  name: studio-server-service
+  namespace: viewspot
+spec:
+  selector:
+    name: studio-server-service
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP

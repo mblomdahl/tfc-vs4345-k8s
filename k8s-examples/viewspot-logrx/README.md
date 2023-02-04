@@ -7,7 +7,8 @@ set up per the instructions in the [root README.md](../../README.md).
 
 ## 1. Create the App Namespace and Secrets
 
-Change directory to `./k8s-examples/viewspot-logrx/` and create the namespace `"viewspot"`:
+Change directory to `./k8s-examples/viewspot-logrx/`, modify the `0-infra.yml` manifest by replacing `"eu-north-1"`
+with your own region and create the namespace `"viewspot"`:
 
     cd k8s-examples/viewspot-logrx/
     kubectl apply -f 0-infra.yml
@@ -27,17 +28,17 @@ Review the values in `1-logrx-config.yml` config map and adjust it to fit your d
     kubectl apply -f 1-logrx-config.yml
 
 
-## 3. Create the Storage, Deployment, Service, and Ingress for `viewspot-logrx`
+## 3. Create the Storage, StatefulSet, Service, and Ingress for `viewspot-logrx`
 
 Modify the `2-logrx-server.yml` manifest and replace all occurrences of
 app domain `"viewspot-logrx.mb-eks.smithmicro.io"` with your own domain name, then apply the application
-deployment, service and ingress resources:
+storage, StatefulSet, service and ingress resources:
 
     kubectl apply -f 2-logrx-server.yml
 
-    kubectl get deployments -n viewspot
-    kubectl get services -n viewspot
-    kubectl describe ingress -n viewspot
+    kubectl get sts logrx-server -n viewspot
+    kubectl get service logrx-server -n viewspot
+    kubectl describe ingress logrx-server -n viewspot
 
 The `logrx-server` pods should be marked as ready 2/2 and the ingress should list the event message
 _"Successfully created Certificate viewspot-logrx-tls-secret"_.

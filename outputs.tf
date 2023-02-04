@@ -49,6 +49,11 @@ output "efs_fs_mount_targets" {
   value       = aws_efs_file_system.efs-0.number_of_mount_targets
 }
 
+output "ack_s3_controller_service_account_iam_role_arn" {
+  description = "AWS IAM ARN for the ack-s3-controller SA"
+  value       = aws_iam_role.aws-eks-ack-s3-controller-role.arn
+}
+
 output "ack_rds_controller_service_account_iam_role_arn" {
   description = "AWS IAM ARN for the ack-rds-controller SA"
   value       = aws_iam_role.aws-eks-ack-rds-controller-role.arn
@@ -72,4 +77,9 @@ output "ack_rds_database_subnet_group_name" {
 output "aws_load_balancer_service_account_iam_role_arn" {
   description = "AWS IAM ARN for the aws-load-balancer-controller SA"
   value       = aws_iam_role.aws-load-balancer-controller-role.arn
+}
+
+output "studio_service_account_iam_role_arn" {
+  description = "AWS IAM ARN for the viewspot-studio SA"
+  value       = aws_iam_role.aws-eks-viewspot-studio-sa-role.arn
 }

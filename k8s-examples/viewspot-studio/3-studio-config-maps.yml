@@ -1,0 +1,96 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-studio
+  name: studio-config-service-config
+  namespace: viewspot
+data:
+  CACHE_TTL_SEC_CONFIG_V1: "1"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-studio
+  name: studio-server-service-config
+  namespace: viewspot
+data:
+  AUTH0_TENANT_DOMAIN: viewspot-server-dev.eu.auth0.com
+  AUTH0_VIEWSPOT_PERMISSIONS_ENABLED: users,roles,pricing,stores,devices,content,analytics,settings
+  EXTERNAL_URI: https://viewspot-studio.mb-eks.smithmicro.io
+  AWS_REGION: eu-north-1
+  MAILER_FROM: noreply@smithmicro.io
+  MAILER_SMTP_SECURE: "true"
+  MAILER_SMTP_HOST: email-smtp.eu-west-1.amazonaws.com
+  MAILER_SMTP_PORT: "465"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: viewspot-studio
+  name: studio-nginx-proxy-conf
+  namespace: viewspot
+data:
+  default.conf: |
+    proxy_cache_path  /mnt/nginx-proxy-cache/caches levels=1:2 keys_zone=nginx-proxy-cache:10m max_size=20g inactive=30d use_temp_path=off;
+
+    server {
+      listen         8080;
+      server_name    _;
+      server_tokens  off;
+      charset        utf-8;
+      gzip           on;
+      gzip_types     text/css application/xml application/javascript application/json;
+
+      client_max_body_size  300m;
+
+      proxy_set_header  Host $host;
+      proxy_set_header  X-Real-IP $remote_addr;
+      proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header  X-Forwarded-Proto https;
+
+      location /ping-pong {
+        add_header Content-Type text/plain;
+        return 200 'gangnam style!';
+      }
+
+      location /nginx-health {
+        access_log  off;
+        add_header  Content-Type application/json;
+        return      200 '{"status": "UP"}';
+      }
+
+      location /api/assets/ {
+        proxy_cache               nginx-proxy-cache;
+        proxy_cache_lock          on;
+        proxy_cache_lock_timeout  1m;
+        proxy_cache_key           $host$uri$is_args$args$slice_range;
+        proxy_cache_valid         200 206;
+        proxy_pass                http://studio-server-service$request_uri;
+      }
+
+      location ~ /api/v3/devices/.+/bestCardForClient {
+        proxy_cache               nginx-proxy-cache;
+        proxy_cache_lock          on;
+        proxy_cache_lock_timeout  1m;
+        proxy_cache_key           $host$uri$is_args$args$http_x_api_access_key;
+        proxy_cache_valid         200 304 1m;
+        proxy_pass                http://studio-server-service$request_uri;
+      }
+
+      location ~ /api/v4/devices/.+/bestCardForClient {
+        proxy_cache               nginx-proxy-cache;
+        proxy_cache_lock          on;
+        proxy_cache_lock_timeout  1m;
+        proxy_cache_key           $host$uri$is_args$args$http_x_api_access_key;
+        proxy_cache_valid         200 304 1m;
+        proxy_pass                http://studio-server-service$request_uri;
+      }
+
+      location / {
+        proxy_pass http://studio-server-service;
+      }
+    }
