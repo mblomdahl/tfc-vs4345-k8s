@@ -32,9 +32,11 @@ resource "aws_iam_role" "aws-eks-viewspot-studio-sa-role" {
   ]
 
   inline_policy {
-    name   = "studio-sa-s3-policy"
+    name = "studio-sa-s3-policy"
+
     policy = jsonencode({
-      Version   = "2012-10-17"
+      Version = "2012-10-17"
+
       Statement = [
         {
           Effect   = "Allow"

@@ -19,21 +19,23 @@ resource "aws_iam_role" "aws-eks-vs7-developer-role" {
   })
 
   inline_policy {
-    name   = "developer-eks-policy"
+    name = "developer-eks-policy"
+
     policy = jsonencode({
-      Version   = "2012-10-17"
+      Version = "2012-10-17"
+
       Statement = [
         {
-          Effect   = "Allow"
-          Action   = [
+          Effect = "Allow"
+          Action = [
             "eks:ListClusters",
             "eks:DescribeCluster",
           ]
           Resource = "arn:aws:eks:*:${var.account_id}:cluster/*"
         },
         {
-          Effect   = "Allow"
-          Action   = [
+          Effect = "Allow"
+          Action = [
             "eks:AccessKubernetesApi",
             "eks:Describe",
             "eks:List"
