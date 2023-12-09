@@ -277,3 +277,13 @@ Create the `vs7` namespace and RBAC roles `vs7-developer-global-viewer-role` and
     kubectl create ns vs7
     kubectl apply -f k8s-infra/vs7-developer-global-viewer-role.yaml
     kubectl apply -f k8s-infra/vs7-developer-ns-admin-role.yaml
+
+Update your `~/.kube/config-vs7-developer` with credentials for the `vs7-developer-role`:
+
+    export KUBECONFIG=~/.kube/config-vs7-developer
+    aws eks update-kubeconfig --profile smsi --name mb-eks-cluster --alias mb-eks-cluster-vs7-developer \
+      --region eu-north-1 --role-arn arn:aws:iam::878179636352:role/mb-eks-vs7-developer-role
+    # And verify it worked, the command below should output something about cluster name "mb-eks-cluster"
+    kubectl cluster-info dump | grep cluster-name | head -n1
+
+Now the tables are set for low-privileged creation of resources within the `vs7` namespace.

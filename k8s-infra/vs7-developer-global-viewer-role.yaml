@@ -7,6 +7,7 @@ rules:
   - apiGroups: [""]
     resources:
       - configmaps
+      - deployments
       - endpoints
       - limitranges
       - namespaces
@@ -14,17 +15,21 @@ rules:
       - persistentvolumes
       - podtemplates
       - pods
+      - replicationcontrollers
       - resourcequotas
       - secrets
       - services
       - serviceaccounts
-    verbs:
-      - list
+    verbs: ["list", "watch"]
 
   - apiGroups: [""]
     resources:
-      - events
       - nodes
+    verbs: ["list", "get", "watch"]
+
+  - apiGroups: ["", "events.k8s.io"]
+    resources:
+      - events
     verbs: ["list", "get", "watch"]
 
   - apiGroups: ["apps"]
@@ -33,18 +38,18 @@ rules:
       - deployments
       - statefulsets
       - daemonsets
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["batch"]
     resources:
       - jobs
       - cronjobs
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["autoscaling"]
     resources:
       - horizontalpodautoscalers
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["extensions"]
     resources:
@@ -59,7 +64,7 @@ rules:
   - apiGroups: ["policy"]
     resources:
       - poddisruptionbudgets
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["networking.k8s.io"]
     resources:
@@ -67,7 +72,7 @@ rules:
       - ingressclasses
       - status
       - networkpolicies
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["storage.k8s.io"]
     resources:
@@ -76,27 +81,27 @@ rules:
       - csidrivers
       - csinodes
       - csistoragecapacities
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["apiregistration.k8s.io"]
     resources:
       - apiservices
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["coordination.k8s.io"]
     resources:
       - leases
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["discovery.k8s.io"]
     resources:
       - endpointslices
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["node.k8s.io"]
     resources:
       - runtimeclasses
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["rbac.authorization.k8s.io"]
     resources:
@@ -104,18 +109,18 @@ rules:
       - clusterrolebindings
       - roles
       - rolebindings
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["scheduling.k8s.io"]
     resources:
       - priorityclasses
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
   - apiGroups: ["flowcontrol.apiserver.k8s.io"]
     resources:
       - flowschemas
       - prioritylevelconfigurations
-    verbs: ["list"]
+    verbs: ["list", "watch"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
