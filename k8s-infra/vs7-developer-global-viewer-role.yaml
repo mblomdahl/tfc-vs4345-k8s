@@ -1,0 +1,133 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: vs7-developer-global-viewer-role
+rules:
+  - apiGroups: [""]
+    resources:
+      - configmaps
+      - endpoints
+      - limitranges
+      - namespaces
+      - persistentvolumeclaims
+      - persistentvolumes
+      - podtemplates
+      - pods
+      - resourcequotas
+      - secrets
+      - services
+      - serviceaccounts
+    verbs:
+      - list
+
+  - apiGroups: [""]
+    resources:
+      - events
+      - nodes
+    verbs: ["list", "get", "watch"]
+
+  - apiGroups: ["apps"]
+    resources:
+      - replicasets
+      - deployments
+      - statefulsets
+      - daemonsets
+    verbs: ["list"]
+
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs: ["list"]
+
+  - apiGroups: ["autoscaling"]
+    resources:
+      - horizontalpodautoscalers
+    verbs: ["list"]
+
+  - apiGroups: ["extensions"]
+    resources:
+      - ingresses
+      - deployments
+      - daemonsets
+      - replicasets
+      - services
+      - configmaps
+    verbs: ["list", "get", "watch"]
+
+  - apiGroups: ["policy"]
+    resources:
+      - poddisruptionbudgets
+    verbs: ["list"]
+
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - ingresses
+      - ingressclasses
+      - status
+      - networkpolicies
+    verbs: ["list"]
+
+  - apiGroups: ["storage.k8s.io"]
+    resources:
+      - storageclasses
+      - volumeattachments
+      - csidrivers
+      - csinodes
+      - csistoragecapacities
+    verbs: ["list"]
+
+  - apiGroups: ["apiregistration.k8s.io"]
+    resources:
+      - apiservices
+    verbs: ["list"]
+
+  - apiGroups: ["coordination.k8s.io"]
+    resources:
+      - leases
+    verbs: ["list"]
+
+  - apiGroups: ["discovery.k8s.io"]
+    resources:
+      - endpointslices
+    verbs: ["list"]
+
+  - apiGroups: ["node.k8s.io"]
+    resources:
+      - runtimeclasses
+    verbs: ["list"]
+
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources:
+      - clusterroles
+      - clusterrolebindings
+      - roles
+      - rolebindings
+    verbs: ["list"]
+
+  - apiGroups: ["scheduling.k8s.io"]
+    resources:
+      - priorityclasses
+    verbs: ["list"]
+
+  - apiGroups: ["flowcontrol.apiserver.k8s.io"]
+    resources:
+      - flowschemas
+      - prioritylevelconfigurations
+    verbs: ["list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: vs7-developer-global-viewer-rolebinding
+subjects:
+  - kind: User
+    name: vs7-developer-role
+    namespace: vs7
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name:  vs7-developer-global-viewer-role
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,44 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: vs7
+  name: vs7-developer-ns-admin-role
+rules:
+  - apiGroups:
+      - vs7
+    resources:
+      - pods
+      - pods/log
+      - pods/status
+      - deployments
+      - replicasets
+      - services
+      - secrets
+      - configmaps
+      - podtemplates
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+      - deletecollection
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: vs7
+  name: vs7-developer-ns-admin-rolebinding
+subjects:
+  - kind: User
+    name: vs7-developer-role
+    namespace: vs7
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: vs7-developer-ns-admin-role
+  apiGroup: rbac.authorization.k8s.io
+---
