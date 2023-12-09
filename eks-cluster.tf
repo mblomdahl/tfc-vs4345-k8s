@@ -3,7 +3,7 @@ module "eks" {
   version = "19.4.2"
 
   cluster_name    = local.cluster_name
-  cluster_version = "1.24"
+  cluster_version = "1.28"
 
   vpc_id                         = module.vpc.vpc_id
   subnet_ids                     = module.vpc.private_subnets
@@ -58,6 +58,14 @@ module "eks" {
       userarn  = "arn:aws:iam::878179636352:user/mats.blomdahl"
       username = "mblomdahl"
       groups   = ["system:masters"]
+    }
+  ]
+
+  aws_auth_roles = [
+    {
+      rolearn  = "arn:aws:iam::878179636352:role/mb-eks-vs7-developer-role"
+      username = "vs7-developer-role"
+      groups   = ["vs7-developers"]
     }
   ]
 

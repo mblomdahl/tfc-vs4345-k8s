@@ -268,3 +268,12 @@ your own role ARN and `"eu-north-1"` with your own region:
 
 Follow the setup steps in [./k8s-examples/vs-studio/README.md](./k8s-examples/vs-studio/README.md) to
 deploy a feature complete Node application with binary assets on S3.
+
+
+### 10. Configure Access for a DevOps Team
+
+Create the `vs7` namespace and RBAC roles `vs7-developer-global-viewer-role` and `vs7-developer-ns-admin-role`:
+
+    kubectl create ns vs7
+    kubectl apply -f k8s-infra/vs7-developer-global-viewer-role.yaml
+    kubectl apply -f k8s-infra/vs7-developer-ns-admin-role.yaml
