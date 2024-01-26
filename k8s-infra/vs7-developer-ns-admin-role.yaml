@@ -15,6 +15,7 @@ rules:
       - podtemplates
       - pods
       - pods/log
+      - pods/exec
       - pods/status
       - secrets
       - services
@@ -34,6 +35,7 @@ rules:
       - namespaces
       - deployments
       - replicasets
+      - statefulsets
     verbs:
       - get
       - list
@@ -47,6 +49,18 @@ rules:
   - apiGroups: ["rds.services.k8s.aws"]
     resources:
       - dbinstances
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
+
+  - apiGroups: ["s3.services.k8s.aws"]
+    resources:
+      - buckets
     verbs:
       - get
       - list

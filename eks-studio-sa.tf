@@ -18,6 +18,8 @@ resource "aws_iam_role" "aws-eks-viewspot-studio-sa-role" {
             "${module.eks.oidc_provider}:aud" : "sts.amazonaws.com",
             "${module.eks.oidc_provider}:sub" : [
               "system:serviceaccount:vs:studio-sa",
+              "system:serviceaccount:vs7:viewspot-dev-studio-sa",
+              "system:serviceaccount:vs7:viewspot-studio-sa",
               "system:serviceaccount:viewspot:studio-sa"
             ]
           }
