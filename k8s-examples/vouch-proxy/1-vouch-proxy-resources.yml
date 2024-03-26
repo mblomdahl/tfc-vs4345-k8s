@@ -34,11 +34,21 @@ spec:
               value: /hello-kubernetes/oauth2
             # See https://github.com/vouch/vouch-proxy/tree/master/config for different provider examples
             - name: OAUTH_PROVIDER
-              value: github
+              value: oidc
             - name: OAUTH_CLIENT_ID
-              value: 90ebaaf33032be7574c5
+              value: fLcHORUAfFmYXqqjdIdYvPFVbMKBSVvZ
             - name: OAUTH_CLIENT_SECRET
-              value: 7ed6b9883dcec9aebbd420606048a589fb2f933b
+              value: qcJts3aNxv8EXbBMaL9JhzkZeBeSBPNjYKNub5gfEVjIHloEYFVZVr64pIq9bk80
+            - name: OAUTH_AUTH_URL
+              value: https://mblomdahl.us.auth0.com/authorize
+            - name: OAUTH_TOKEN_URL
+              value: https://mblomdahl.us.auth0.com/oauth/token
+            - name: OAUTH_USER_INFO_URL:
+              value: https://mblomdahl.us.auth0.com/userinfo
+            - name: OAUTH_SCOPES
+              value: openid,email,profile
+            - name: OAUTH_CALLBACK_URL
+              value: https://eks.mabl.se/hello-kubernetes/oauth2/auth
           ports:
             - containerPort: 9090
               protocol: TCP
