@@ -1,0 +1,83 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: vouch-proxy
+  name: vouch-proxy
+  namespace: spos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: vouch-proxy
+  template:
+    metadata:
+      labels:
+        k8s-app: vouch-proxy
+    spec:
+      containers:
+        - name: vouch-proxy
+          image: quay.io/vouch/vouch-proxy:latest
+          imagePullPolicy: Always
+          env:
+            - name: VOUCH_ALLOWALLUSERS
+              value: "true"
+            # Recommended: remove VOUCH_ALLOWALLUSERS and set an allowlist
+            # - name: VOUCH_WHITELIST
+            #   value: alice,bob
+            - name: VOUCH_COOKIE_DOMAIN
+              value: eks.mabl.se
+            - name: VOUCH_LISTEN
+              value: 0.0.0.0
+            - name: VOUCH_DOCUMENT_ROOT
+              value: /hello-kubernetes/oauth2
+            # See https://github.com/vouch/vouch-proxy/tree/master/config for different provider examples
+            - name: OAUTH_PROVIDER
+              value: github
+            - name: OAUTH_CLIENT_ID
+              value: 90ebaaf33032be7574c5
+            - name: OAUTH_CLIENT_SECRET
+              value: 7ed6b9883dcec9aebbd420606048a589fb2f933b
+          ports:
+            - containerPort: 9090
+              protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: vouch-proxy
+  name: vouch-proxy
+  namespace: spos
+spec:
+  ports:
+    - port: 9090
+      targetPort: 9090
+  selector:
+    k8s-app: vouch-proxy
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vouch-proxy
+  namespace: spos
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-production
+spec:
+  tls:
+    - hosts:
+        - eks.mabl.se
+      secretName: vouch-proxy-tls-secret
+  rules:
+    - host: eks.mabl.se
+      http:
+        paths:
+          - path: /hello-kubernetes/oauth2
+            pathType: Prefix
+            backend:
+              service:
+                name: vouch-proxy
+                port:
+                  number: 9090
